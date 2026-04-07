@@ -625,26 +625,32 @@
       renderDashboard();
     });
 
-    fetch("cards.json")
-      .then(res => {
-        if (!res.ok) {
-          throw new Error("ไม่สามารถโหลด cards.json ได้");
-        }
-        return res.json();
-      })
-      .then(data => {
-        cardsData = data;
-        renderDashboard();
-      })
-      .catch(error => {
-        document.getElementById("cardsContainer").innerHTML = `
-          <div class="card-item">
-            <h3>เกิดข้อผิดพลาด</h3>
-            <p>ไม่สามารถโหลดข้อมูลบัตรจาก cards.json ได้</p>
-            <p>${error.message}</p>
-          </div>
-        `;
-      });
+fetch("cards.json")
+  .then(res => {
+    if (!res.ok) {
+      throw new Error("ไม่สามารถโหลด cards.json ได้");
+    }
+    return res.json();
+  })
+  .then(data => {
+    const parsedCards = Array.isArray(data) ? data : (data.cards || []);
+
+    if (!Array.isArray(parsedCards) || parsedCards.length === 0) {
+      throw new Error("รูปแบบข้อมูลใน cards.json ไม่ถูกต้อง หรือไม่มีข้อมูลบัตร");
+    }
+
+    cardsData = parsedCards;
+    renderDashboard();
+  })
+  .catch(error => {
+    document.getElementById("cardsContainer").innerHTML = `
+      <div class="card-item">
+        <h3>เกิดข้อผิดพลาด</h3>
+        <p>ไม่สามารถโหลดข้อมูลบัตรจาก cards.json ได้</p>
+        <p>${error.message}</p>
+      </div>
+    `;
+  });
   </script>
 </body>
 </html>
