@@ -1,40 +1,40 @@
 [
   {
-    "id": "card1",
+    "id": "krungsri-now-platinum",
     "bank": "Krungsri",
     "name": "กรุงศรี NOW Platinum",
     "last4": "5446",
     "limit": 120000,
-    "usedAmount": 0,
-    "statementDay": 9,
+    "usedAmount": 39211.07,
+    "statementDay": 12,
     "daysFromStatementToDue": 20,
-    "sharedLimitGroup": "krungsri_shared",
-    "sharedLimitLabel": "วงเงินใช้ร่วมกับ กรุงศรี HomePro Visa Platinum"
+    "sharedLimitGroup": "krungsri-shared-120k",
+    "sharedLimitLabel": "วงเงินนี้ใช้ร่วมกับ กรุงศรี HomePro Visa Platinum"
   },
   {
-    "id": "card2",
+    "id": "krungsri-homepro-visa-platinum",
     "bank": "Krungsri",
     "name": "กรุงศรี HomePro Visa Platinum",
     "last4": "3928",
     "limit": 120000,
-    "usedAmount": 90805.70,
+    "usedAmount": 49655.33,
     "statementDay": 12,
     "daysFromStatementToDue": 20,
-    "sharedLimitGroup": "krungsri_shared",
-    "sharedLimitLabel": "วงเงินใช้ร่วมกับ กรุงศรี NOW Platinum"
+    "sharedLimitGroup": "krungsri-shared-120k",
+    "sharedLimitLabel": "วงเงินนี้ใช้ร่วมกับ กรุงศรี NOW Platinum"
   },
   {
-    "id": "card3",
+    "id": "cardx-family-plus",
     "bank": "CardX",
     "name": "CardX Family Plus",
     "last4": "2402",
     "limit": 271000,
-    "usedAmount": 137173.79,
+    "usedAmount": 55046.58,
     "statementDay": 23,
     "daysFromStatementToDue": 20
   },
   {
-    "id": "card4",
+    "id": "ktc-visa-signature",
     "bank": "KTC",
     "name": "KTC Visa Signature",
     "last4": "0822",
@@ -44,7 +44,7 @@
     "daysFromStatementToDue": 15
   },
   {
-    "id": "card5",
+    "id": "ttb-main",
     "bank": "ttb",
     "name": "ttb",
     "last4": "4153",
@@ -54,7 +54,7 @@
     "daysFromStatementToDue": 20
   },
   {
-    "id": "card6",
+    "id": "central-the-1",
     "bank": "Central",
     "name": "Central The 1",
     "last4": "0017",
