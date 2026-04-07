@@ -1,32 +1,59 @@
 {
-  "updatedAt": "2026-04-07 15:30",
+  "updatedAt": "2026-04-07 17:10",
   "history": [
     {
-      "date": "2026-04-01",
-      "cardId": "ktc-01",
-      "cardName": "KTC Main",
-      "event": "payment",
-      "amount": 5000,
+      "date": "2026-04-07",
+      "cardId": "krungsri-now-5446",
+      "cardName": "Krungsri NOW Platinum",
+      "event": "import",
+      "amount": 0,
       "status": "paid",
-      "note": "Partial payment"
-    },
-    {
-      "date": "2026-04-05",
-      "cardId": "scb-01",
-      "cardName": "SCB Online",
-      "event": "update",
-      "amount": 8200,
-      "status": "watch",
-      "note": "Updated latest amount"
+      "note": "Imported from source image | Last 4 digits: 5446 | No payment due"
     },
     {
       "date": "2026-04-07",
-      "cardId": "scb-01",
-      "cardName": "SCB Online",
-      "event": "due",
-      "amount": 8200,
+      "cardId": "krungsri-homepro-3928",
+      "cardName": "Krungsri HomePro Visa Platinum",
+      "event": "import",
+      "amount": 90805.70,
       "status": "due",
-      "note": "Near due date"
+      "note": "Imported from source image | Last 4 digits: 3928 | Statement: 12/02/26 | Due: 04/03/26 | Min payment: 7264.46"
+    },
+    {
+      "date": "2026-04-07",
+      "cardId": "cardx-familyplus-2402",
+      "cardName": "CardX Family Plus",
+      "event": "import",
+      "amount": 137173.79,
+      "status": "due",
+      "note": "Imported from source image | Last 4 digits: 2402 | Statement: 23/11/25 | Due: 13/12/25 | Min payment: 10973.90"
+    },
+    {
+      "date": "2026-04-07",
+      "cardId": "ktc-signature-0822",
+      "cardName": "KTC Visa Signature",
+      "event": "import",
+      "amount": 62412.20,
+      "status": "due",
+      "note": "Imported from source image | Last 4 digits: 0822 | Statement: 18/11/25 | Due: 03/12/25 | Min payment: 4992.97"
+    },
+    {
+      "date": "2026-04-07",
+      "cardId": "ttb-4153",
+      "cardName": "ttb",
+      "event": "import",
+      "amount": 108351.92,
+      "status": "due",
+      "note": "Imported from source image | Last 4 digits: 4153 | Statement: 14/11/2025 | Due: 04/12/2025 | Min payment: 8668.15 | Amount shown with * in source"
+    },
+    {
+      "date": "2026-04-07",
+      "cardId": "central-the1-0017",
+      "cardName": "Central The 1",
+      "event": "import",
+      "amount": 0,
+      "status": "paid",
+      "note": "Imported from source image | Last 4 digits: 0017 | No payment due"
     }
   ]
 }
