@@ -6,7 +6,7 @@
     "last4": "5446",
     "limit": 120000,
     "usedAmount": 0,
-    "statementDay": 12,
+    "statementDay": 9,
     "daysFromStatementToDue": 20,
     "sharedLimitGroup": "krungsri_shared",
     "sharedLimitLabel": "วงเงินใช้ร่วมกับ กรุงศรี HomePro Visa Platinum"
@@ -39,7 +39,7 @@
     "name": "KTC Visa Signature",
     "last4": "0822",
     "limit": 70000,
-    "usedAmount": 62412.20,
+    "usedAmount": 42515.66,
     "statementDay": 18,
     "daysFromStatementToDue": 15
   },
@@ -49,7 +49,7 @@
     "name": "ttb",
     "last4": "4153",
     "limit": 140000,
-    "usedAmount": 108351.92,
+    "usedAmount": 131037.12,
     "statementDay": 14,
     "daysFromStatementToDue": 20
   },

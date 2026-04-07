@@ -17,7 +17,7 @@
     }
 
     .container {
-      max-width: 1280px;
+      max-width: 1440px;
       margin: 0 auto;
       padding: 24px 16px 40px;
     }
@@ -72,9 +72,14 @@
       color: #111827;
     }
 
+    .btn-danger {
+      background: #dc2626;
+      color: #fff;
+    }
+
     .decision-section {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
       gap: 16px;
       margin: 22px 0;
     }
@@ -105,8 +110,8 @@
     }
 
     .decision-input-row input {
-      flex: 1 1 200px;
-      min-width: 200px;
+      flex: 1 1 220px;
+      min-width: 220px;
       padding: 10px 12px;
       border: 1px solid #d1d5db;
       border-radius: 10px;
@@ -126,6 +131,18 @@
 
     .reason-list li {
       margin-bottom: 4px;
+    }
+
+    .advice-main {
+      margin-top: 10px;
+      font-weight: 700;
+    }
+
+    .advice-note {
+      margin-top: 10px;
+      color: #6b7280;
+      font-size: 13px;
+      line-height: 1.6;
     }
 
     .summary-grid {
@@ -149,7 +166,7 @@
 
     .cards-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
       gap: 16px;
     }
 
@@ -199,30 +216,30 @@
       font-size: 14px;
     }
 
-    .update-dialog {
+    .dialog-box {
       border: none;
       border-radius: 16px;
       padding: 20px;
-      width: min(92vw, 420px);
+      width: min(92vw, 460px);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     }
 
-    .update-dialog::backdrop {
+    .dialog-box::backdrop {
       background: rgba(0, 0, 0, 0.35);
     }
 
-    .update-dialog h3 {
+    .dialog-box h3 {
       margin-top: 0;
       margin-bottom: 14px;
     }
 
-    .update-dialog label {
+    .dialog-box label {
       display: block;
       margin-bottom: 8px;
       font-weight: 700;
     }
 
-    .update-dialog input {
+    .dialog-box input {
       width: 100%;
       padding: 10px 12px;
       border: 1px solid #d1d5db;
@@ -236,6 +253,7 @@
       display: flex;
       justify-content: flex-end;
       gap: 10px;
+      flex-wrap: wrap;
     }
 
     .status-good {
@@ -251,6 +269,13 @@
     .status-high {
       color: #b91c1c;
       font-weight: 700;
+    }
+
+    .warning-text {
+      color: #b91c1c;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-top: 8px;
     }
 
     @media (max-width: 640px) {
@@ -271,7 +296,7 @@
       <div class="header-date" id="currentDateText">ข้อมูล ณ วันที่ -</div>
 
       <div class="top-actions">
-        <button class="btn btn-secondary" id="resetLocalDataBtn">ล้างยอดที่บันทึกไว้ในเครื่องนี้</button>
+        <button class="btn btn-secondary" id="openResetDialogBtn">ล้างยอดที่บันทึกไว้ในเครื่องนี้</button>
       </div>
     </div>
 
@@ -314,7 +339,7 @@
     </div>
   </div>
 
-  <dialog id="updateDialog" class="update-dialog">
+  <dialog id="updateDialog" class="dialog-box">
     <form id="updateForm">
       <h3 id="dialogTitle">อัปเดทยอดการใช้งาน</h3>
 
@@ -330,6 +355,29 @@
       <div class="dialog-actions">
         <button type="button" class="btn btn-secondary" id="cancelDialogBtn">ยกเลิก</button>
         <button type="submit" class="btn btn-primary">บันทึก</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="resetDialog" class="dialog-box">
+    <form id="resetForm">
+      <h3>ยืนยันการล้างข้อมูล</h3>
+      <p>การลบนี้จะลบยอดการใช้งานที่บันทึกไว้ในเครื่องนี้ทั้งหมด</p>
+      <label for="resetConfirmInput">พิมพ์คำว่า <strong>reset</strong> เพื่อยืนยัน</label>
+      <input
+        type="text"
+        id="resetConfirmInput"
+        autocomplete="off"
+        placeholder="พิมพ์ reset"
+        required
+      />
+      <div class="warning-text">
+        หลังล้างข้อมูล ระบบจะกลับไปใช้ค่าตั้งต้นจาก cards.json
+      </div>
+
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" id="cancelResetDialogBtn">ยกเลิก</button>
+        <button type="submit" class="btn btn-danger">ล้างข้อมูล</button>
       </div>
     </form>
   </dialog>
@@ -452,6 +500,15 @@
     function closeUpdateDialog() {
       editingCardId = null;
       document.getElementById("updateDialog").close();
+    }
+
+    function openResetDialog() {
+      document.getElementById("resetConfirmInput").value = "";
+      document.getElementById("resetDialog").showModal();
+    }
+
+    function closeResetDialog() {
+      document.getElementById("resetDialog").close();
     }
 
     function getDaysUntilDate(targetDate) {
@@ -709,6 +766,38 @@
       return reasons;
     }
 
+    function getPaymentActionAdvice(card) {
+      const usedAmount = Number(card.usedAmount || 0);
+      const utilization = Number(card.utilization || 0);
+      const daysUntilDue = Number(card.daysUntilDue || 999);
+
+      if (daysUntilDue <= 3) {
+        return {
+          title: "อย่างน้อยควรจ่ายขั้นต่ำก่อน",
+          note: "ถ้ายังไม่พร้อมจ่ายเต็ม อย่างน้อยควรตรวจสอบยอดขั้นต่ำจริงจากแอปธนาคารและชำระก่อนถึงกำหนด"
+        };
+      }
+
+      if (utilization >= 80 || usedAmount >= 100000) {
+        return {
+          title: "แนะนำให้จ่ายมากกว่าขั้นต่ำ หรือจ่ายเต็มถ้าทำได้",
+          note: "กรณีใช้วงเงินสูง การจ่ายมากกว่าขั้นต่ำจะช่วยลดภาระและคืนวงเงินได้มากกว่า"
+        };
+      }
+
+      if (usedAmount > 0) {
+        return {
+          title: "แนะนำให้จ่ายเต็มถ้าทำได้",
+          note: "หากยอดไม่สูงเกินไป การจ่ายเต็มจะช่วยปิดยอดรอบนี้ได้ง่ายกว่า"
+        };
+      }
+
+      return {
+        title: "ยังไม่มีคำแนะนำการชำระ",
+        note: "ขณะนี้ยังไม่มียอดการใช้งาน"
+      };
+    }
+
     function renderPaymentRecommendation(cards) {
       const resultEl = document.getElementById("paymentRecommendationResult");
       if (!resultEl) return;
@@ -722,15 +811,24 @@
 
       const best = ranked[0];
       const reasons = buildPaymentReasons(best);
+      const advice = getPaymentActionAdvice(best);
 
       resultEl.innerHTML = `
         <div><strong>ควรพิจารณาชำระก่อน:</strong> ${best.name}</div>
         <div>ยอดการใช้งานปัจจุบัน: ${formatBaht(best.usedAmount)} บาท</div>
         <div>การใช้วงเงิน: ${best.utilization.toFixed(1)}%</div>
         <div>วันครบกำหนดชำระ: ${best.dueDateText}</div>
+
+        <div class="advice-main">คำแนะนำหลัก: ${advice.title}</div>
+
         <ul class="reason-list">
           ${reasons.map(reason => `<li>${reason}</li>`).join("")}
         </ul>
+
+        <div class="advice-note">
+          หมายเหตุ: ${advice.note}<br>
+          คำแนะนำนี้เป็นเพียงคำแนะนำเบื้องต้นจากข้อมูลใน dashboard และควรตรวจสอบยอดขั้นต่ำจริงจากแอปธนาคารก่อนชำระ
+        </div>
       `;
     }
 
@@ -840,11 +938,20 @@
       }
     });
 
-    document.getElementById("resetLocalDataBtn").addEventListener("click", function () {
-      const confirmed = confirm("ต้องการล้างยอดที่บันทึกไว้ในเครื่องนี้ใช่หรือไม่?");
-      if (!confirmed) return;
+    document.getElementById("openResetDialogBtn").addEventListener("click", openResetDialog);
+    document.getElementById("cancelResetDialogBtn").addEventListener("click", closeResetDialog);
+
+    document.getElementById("resetForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const value = document.getElementById("resetConfirmInput").value.trim().toLowerCase();
+      if (value !== "reset") {
+        alert('กรุณาพิมพ์คำว่า "reset" ให้ถูกต้อง');
+        return;
+      }
 
       localStorage.removeItem(STORAGE_KEY);
+      closeResetDialog();
       renderDashboard();
     });
 
