@@ -1,29 +1,68 @@
 [
   {
     "id": "card1",
-    "bank": "KBank",
-    "name": "KBank เครดิต",
-    "limit": 50000,
-    "usedAmount": 12000,
-    "statementDay": 15,
-    "dueDay": 30
+    "bank": "Krungsri",
+    "name": "กรุงศรี NOW Platinum",
+    "last4": "5446",
+    "limit": 120000,
+    "usedAmount": 0,
+    "statementDay": 9,
+    "dueDay": 0,
+    "daysFromStatementToDue": 20
   },
   {
     "id": "card2",
-    "bank": "SCB",
-    "name": "SCB เครดิต",
-    "limit": 80000,
-    "usedAmount": 25000,
-    "statementDay": 18,
-    "dueDay": 3
+    "bank": "Krungsri",
+    "name": "กรุงศรี HomePro Visa Platinum",
+    "last4": "3928",
+    "limit": 120000,
+    "usedAmount": 90805.70,
+    "statementDay": 12,
+    "dueDay": 4,
+    "daysFromStatementToDue": 20
   },
   {
     "id": "card3",
-    "bank": "Krungsri",
-    "name": "Krungsri เครดิต",
-    "limit": 100000,
-    "usedAmount": 40000,
-    "statementDay": 10,
-    "dueDay": 25
+    "bank": "CardX",
+    "name": "CardX Family Plus",
+    "last4": "2402",
+    "limit": 271000,
+    "usedAmount": 137173.79,
+    "statementDay": 23,
+    "dueDay": 13,
+    "daysFromStatementToDue": 20
+  },
+  {
+    "id": "card4",
+    "bank": "KTC",
+    "name": "KTC Visa Signature",
+    "last4": "0822",
+    "limit": 70000,
+    "usedAmount": 62412.20,
+    "statementDay": 18,
+    "dueDay": 3,
+    "daysFromStatementToDue": 15
+  },
+  {
+    "id": "card5",
+    "bank": "ttb",
+    "name": "ttb",
+    "last4": "4153",
+    "limit": 140000,
+    "usedAmount": 108351.92,
+    "statementDay": 14,
+    "dueDay": 4,
+    "daysFromStatementToDue": 20
+  },
+  {
+    "id": "card6",
+    "bank": "Central",
+    "name": "Central The 1",
+    "last4": "0017",
+    "limit": 156000,
+    "usedAmount": 0,
+    "statementDay": 18,
+    "dueDay": 0,
+    "daysFromStatementToDue": 20
   }
 ]

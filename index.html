@@ -12,18 +12,18 @@
     body {
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
-      background: #f5f7fb;
-      color: #1f2937;
+      background: #f3f4f6;
+      color: #111827;
     }
 
     .container {
-      max-width: 1200px;
+      max-width: 1280px;
       margin: 0 auto;
       padding: 24px 16px 40px;
     }
 
     .page-header {
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .page-header h1 {
@@ -34,15 +34,16 @@
 
     .page-header p {
       margin: 0;
-      color: #6b7280;
-      line-height: 1.6;
+      color: #4b5563;
+      line-height: 1.7;
+      font-size: 15px;
     }
 
     .top-actions {
       display: flex;
-      flex-wrap: wrap;
       gap: 10px;
-      margin-top: 16px;
+      margin-top: 14px;
+      flex-wrap: wrap;
     }
 
     .btn {
@@ -51,7 +52,7 @@
       padding: 10px 14px;
       cursor: pointer;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .btn-primary {
@@ -66,18 +67,19 @@
 
     .decision-section {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
       gap: 16px;
       margin: 22px 0;
     }
 
     .decision-box,
     .summary-box,
-    .card-item {
+    .card-item,
+    .note-box {
       background: #ffffff;
       border-radius: 16px;
       padding: 16px;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
     }
 
     .decision-box h3,
@@ -85,6 +87,7 @@
     .card-item h3 {
       margin-top: 0;
       margin-bottom: 12px;
+      font-size: 18px;
     }
 
     .decision-input-row {
@@ -95,8 +98,8 @@
     }
 
     .decision-input-row input {
-      flex: 1 1 180px;
-      min-width: 180px;
+      flex: 1 1 200px;
+      min-width: 200px;
       padding: 10px 12px;
       border: 1px solid #d1d5db;
       border-radius: 10px;
@@ -107,18 +110,17 @@
     .decision-result {
       line-height: 1.7;
       font-size: 15px;
-      color: #111827;
     }
 
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 16px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .summary-value {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 700;
       margin-bottom: 6px;
     }
@@ -131,14 +133,14 @@
 
     .cards-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 16px;
     }
 
     .card-item p {
-      margin: 8px 0;
-      line-height: 1.6;
-      font-size: 15px;
+      margin: 7px 0;
+      line-height: 1.55;
+      font-size: 14px;
     }
 
     .card-row-strong {
@@ -154,26 +156,22 @@
       background: #2563eb;
       color: #fff;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .card-badge {
       display: inline-block;
       margin-bottom: 10px;
-      padding: 5px 10px;
+      padding: 4px 9px;
       border-radius: 999px;
       background: #eff6ff;
       color: #1d4ed8;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
     }
 
     .note-box {
-      margin-top: 20px;
-      background: #fff;
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      margin-top: 14px;
       line-height: 1.7;
       color: #374151;
       font-size: 14px;
@@ -199,7 +197,7 @@
     .update-dialog label {
       display: block;
       margin-bottom: 8px;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .update-dialog input {
@@ -233,13 +231,13 @@
       font-weight: 700;
     }
 
+    .muted {
+      color: #6b7280;
+    }
+
     @media (max-width: 640px) {
       .page-header h1 {
         font-size: 24px;
-      }
-
-      .summary-value {
-        font-size: 22px;
       }
     }
   </style>
@@ -249,7 +247,7 @@
     <div class="page-header">
       <h1>Dashboard ติดตามบัตรเครดิต</h1>
       <p>
-        ใช้สำหรับอัปเดตยอดการใช้งานของแต่ละบัตร และช่วยตัดสินใจว่า
+        ใช้สำหรับอัปเดตยอดที่ต้องชำระของแต่ละบัตร และช่วยตัดสินใจว่า
         หากจะใช้บัตรยอดหนึ่งควรใช้บัตรไหนดี และหากจะชำระเงินควรชำระบัตรใดก่อน
       </p>
 
@@ -281,31 +279,27 @@
       <div class="decision-box">
         <h3>วันนี้ควรชำระบัตรไหนดี</h3>
         <div id="paymentRecommendationResult" class="decision-result">
-          ระบบจะแนะนำจากยอดใช้งานปัจจุบันและวันครบกำหนดชำระ
+          ระบบจะแนะนำจากยอดที่ต้องชำระปัจจุบันและวันครบกำหนดชำระ
         </div>
       </div>
     </div>
 
-    <div class="summary-grid" id="summaryContainer">
-      <!-- summary render -->
-    </div>
+    <div class="summary-grid" id="summaryContainer"></div>
 
-    <div class="cards-grid" id="cardsContainer">
-      <!-- cards render -->
-    </div>
+    <div class="cards-grid" id="cardsContainer"></div>
 
     <div class="note-box">
       <strong>หมายเหตุ:</strong>
-      ยอดที่อัปเดตจะถูกเก็บไว้ใน <code>localStorage</code> ของเบราว์เซอร์เครื่องนี้เท่านั้น
+      ยอดที่อัปเดตจะถูกเก็บไว้ใน localStorage ของเบราว์เซอร์เครื่องนี้เท่านั้น
       หากเปิดจากเครื่องอื่นหรือเคลียร์ข้อมูลเบราว์เซอร์ ยอดที่บันทึกไว้จะหายไป
     </div>
   </div>
 
   <dialog id="updateDialog" class="update-dialog">
     <form id="updateForm">
-      <h3 id="dialogTitle">อัปเดตยอดการใช้งาน</h3>
+      <h3 id="dialogTitle">อัปเดตยอดที่ต้องชำระ</h3>
 
-      <label for="usedAmountInput">ยอดการใช้งานปัจจุบัน (บาท)</label>
+      <label for="usedAmountInput">ยอดที่ต้องชำระปัจจุบัน (บาท)</label>
       <input
         type="number"
         id="usedAmountInput"
@@ -345,32 +339,36 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
 
-    function getLocalUsedAmount(cardId, fallback = 0) {
+    function getLocalUsedAmount(cardId, fallback = null) {
       const usageMap = loadUsageMap();
-      return Number(usageMap[cardId]?.usedAmount ?? fallback ?? 0);
+      const value = usageMap[cardId]?.usedAmount;
+      return value === undefined || value === null ? fallback : Number(value);
     }
 
     function setLocalUsedAmount(cardId, usedAmount) {
       const usageMap = loadUsageMap();
       usageMap[cardId] = {
         ...(usageMap[cardId] || {}),
-        usedAmount: Number(usedAmount) || 0
+        usedAmount: Math.max(0, Number(usedAmount) || 0)
       };
       saveUsageMap(usageMap);
     }
 
     function getCardsWithLocalUsage(cards) {
       return cards.map(card => {
+        const localValue = getLocalUsedAmount(card.id, null);
         return {
           ...card,
-          usedAmount: getLocalUsedAmount(card.id, card.usedAmount || 0)
+          usedAmount: localValue === null
+            ? Math.max(0, Number(card.usedAmount || 0))
+            : Math.max(0, Number(localValue))
         };
       });
     }
 
     function openUpdateDialog(cardId, cardName, currentUsedAmount) {
       editingCardId = cardId;
-      document.getElementById("dialogTitle").textContent = `อัปเดตยอดการใช้งาน - ${cardName}`;
+      document.getElementById("dialogTitle").textContent = `อัปเดตยอดที่ต้องชำระ - ${cardName}`;
       document.getElementById("usedAmountInput").value = currentUsedAmount || 0;
       document.getElementById("updateDialog").showModal();
     }
@@ -382,21 +380,12 @@
 
     function getCutoffStatus(usagePercent) {
       if (usagePercent < 30) {
-        return {
-          text: "ดี",
-          className: "status-good"
-        };
+        return { text: "ดี", className: "status-good" };
       }
       if (usagePercent < 80) {
-        return {
-          text: "เฝ้าระวัง",
-          className: "status-warn"
-        };
+        return { text: "เฝ้าระวัง", className: "status-warn" };
       }
-      return {
-        text: "สูง",
-        className: "status-high"
-      };
+      return { text: "สูง", className: "status-high" };
     }
 
     function rankCardsForSpending(cards, plannedAmount) {
@@ -413,7 +402,6 @@
 
           let score = 0;
           if (canUse) score += 1000;
-
           score -= afterUtilization;
           score += available / 1000;
 
@@ -450,9 +438,10 @@
           const used = Number(card.usedAmount || 0);
           const utilization = limit > 0 ? (used / limit) * 100 : 0;
           const daysUntilDue = getDaysUntilDue(card.dueDay);
+          const hasDueDate = Number(card.dueDay || 0) > 0;
 
           let score = 0;
-          score += Math.max(0, 40 - daysUntilDue) * 20;
+          score += hasDueDate ? Math.max(0, 40 - daysUntilDue) * 20 : 0;
           score += used / 100;
           score += utilization * 2;
 
@@ -460,10 +449,11 @@
             ...card,
             utilization,
             daysUntilDue,
+            hasDueDate,
             score
           };
         })
-        .filter(card => Number(card.usedAmount || 0) > 0)
+        .filter(card => Number(card.usedAmount || 0) > 0 && card.hasDueDate)
         .sort((a, b) => b.score - a.score);
     }
 
@@ -496,7 +486,7 @@
         <div><strong>แนะนำ:</strong> ${best.name}</div>
         <div>ยอดที่ต้องการใช้: ${formatBaht(plannedAmount)} บาท</div>
         <div>วงเงินคงเหลือก่อนใช้: ${formatBaht(best.available)} บาท</div>
-        <div>ยอดใช้งานหลังใช้: ${formatBaht(best.afterUsed)} บาท</div>
+        <div>ยอดรวมหลังใช้: ${formatBaht(best.afterUsed)} บาท</div>
         <div>การใช้วงเงินหลังรูด: ${best.afterUtilization.toFixed(1)}%</div>
       `;
     }
@@ -508,7 +498,7 @@
       const ranked = rankCardsForPayment(cards);
 
       if (!ranked.length) {
-        resultEl.innerHTML = `ยังไม่มียอดใช้งานค้างชำระ`;
+        resultEl.innerHTML = `ขณะนี้ยังไม่พบบัตรที่มียอดต้องชำระและมีวันครบกำหนดชำระ`;
         return;
       }
 
@@ -516,7 +506,7 @@
 
       resultEl.innerHTML = `
         <div><strong>ควรพิจารณาชำระก่อน:</strong> ${best.name}</div>
-        <div>ยอดใช้งานปัจจุบัน: ${formatBaht(best.usedAmount)} บาท</div>
+        <div>ยอดที่ต้องชำระปัจจุบัน: ${formatBaht(best.usedAmount)} บาท</div>
         <div>การใช้วงเงิน: ${best.utilization.toFixed(1)}%</div>
         <div>ใกล้ครบกำหนดในอีกประมาณ ${best.daysUntilDue} วัน</div>
       `;
@@ -532,9 +522,9 @@
 
       summaryContainer.innerHTML = `
         <div class="summary-box">
-          <h3>ยอดใช้งานรวม</h3>
+          <h3>ยอดที่ต้องชำระรวม</h3>
           <div class="summary-value">${formatBaht(totalUsed)} บาท</div>
-          <div class="summary-sub">ยอดการใช้งานรวมของทุกบัตร</div>
+          <div class="summary-sub">ยอดที่ต้องชำระรวมของทุกบัตร</div>
         </div>
 
         <div class="summary-box">
@@ -559,21 +549,22 @@
 
       container.innerHTML = cards.map(card => {
         const limit = Number(card.limit || 0);
-        const usedAmount = Number(card.usedAmount || 0);
+        const usedAmount = Math.max(0, Number(card.usedAmount || 0));
         const available = limit - usedAmount;
         const usagePercent = limit > 0 ? (usedAmount / limit) * 100 : 0;
         const status = getCutoffStatus(usagePercent);
 
         return `
           <div class="card-item">
-            <div class="card-badge">${card.bank || "บัตรเครดิต"}</div>
+            <div class="card-badge">${card.bank || "บัตรเครดิต"}${card.last4 ? " • " + card.last4 : ""}</div>
             <h3>${card.name}</h3>
             <p>วงเงิน: <span class="card-row-strong">${formatBaht(limit)}</span> บาท</p>
-            <p>ยอดการใช้งาน: <span class="card-row-strong">${formatBaht(usedAmount)}</span> บาท</p>
+            <p>ยอดที่ต้องชำระ: <span class="card-row-strong">${formatBaht(usedAmount)}</span> บาท</p>
             <p>วงเงินคงเหลือ: <span class="card-row-strong">${formatBaht(available)}</span> บาท</p>
             <p>การใช้วงเงิน: <span class="card-row-strong">${usagePercent.toFixed(1)}%</span></p>
-            <p>วันตัดรอบ: ${card.statementDay || "-"}</p>
+            <p>วันสรุปยอด: ${card.statementDay || "-"}</p>
             <p>วันครบกำหนดชำระ: ${card.dueDay || "-"}</p>
+            <p>ช่วงวันจากสรุปยอดถึงกำหนดชำระ: ${card.daysFromStatementToDue || "-"} วัน</p>
             <p>สถานะ: <span class="${status.className}">${status.text}</span></p>
 
             <button
@@ -625,32 +616,41 @@
       renderDashboard();
     });
 
-fetch("cards.json")
-  .then(res => {
-    if (!res.ok) {
-      throw new Error("ไม่สามารถโหลด cards.json ได้");
-    }
-    return res.json();
-  })
-  .then(data => {
-    const parsedCards = Array.isArray(data) ? data : (data.cards || []);
+    fetch("cards.json")
+      .then(res => {
+        if (!res.ok) {
+          throw new Error("ไม่สามารถโหลด cards.json ได้");
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (!Array.isArray(data) || data.length === 0) {
+          throw new Error("รูปแบบข้อมูลใน cards.json ไม่ถูกต้อง หรือไม่มีข้อมูลบัตร");
+        }
 
-    if (!Array.isArray(parsedCards) || parsedCards.length === 0) {
-      throw new Error("รูปแบบข้อมูลใน cards.json ไม่ถูกต้อง หรือไม่มีข้อมูลบัตร");
-    }
+        cardsData = data.map(card => ({
+          id: card.id,
+          bank: card.bank,
+          name: card.name,
+          last4: card.last4 || "",
+          limit: Number(card.limit || 0),
+          usedAmount: Math.max(0, Number(card.usedAmount || 0)),
+          statementDay: Number(card.statementDay || 0),
+          dueDay: Number(card.dueDay || 0),
+          daysFromStatementToDue: Number(card.daysFromStatementToDue || 0)
+        }));
 
-    cardsData = parsedCards;
-    renderDashboard();
-  })
-  .catch(error => {
-    document.getElementById("cardsContainer").innerHTML = `
-      <div class="card-item">
-        <h3>เกิดข้อผิดพลาด</h3>
-        <p>ไม่สามารถโหลดข้อมูลบัตรจาก cards.json ได้</p>
-        <p>${error.message}</p>
-      </div>
-    `;
-  });
+        renderDashboard();
+      })
+      .catch(error => {
+        document.getElementById("cardsContainer").innerHTML = `
+          <div class="card-item">
+            <h3>เกิดข้อผิดพลาด</h3>
+            <p>ไม่สามารถโหลดข้อมูลบัตรจาก cards.json ได้</p>
+            <p>${error.message}</p>
+          </div>
+        `;
+      });
   </script>
 </body>
 </html>
