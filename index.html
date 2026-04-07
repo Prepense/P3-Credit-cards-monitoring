@@ -130,7 +130,7 @@
 
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 16px;
       margin-bottom: 16px;
     }
@@ -183,6 +183,12 @@
       background: #eff6ff;
       color: #1d4ed8;
       font-size: 11px;
+      font-weight: 700;
+    }
+
+    .shared-note {
+      color: #7c3aed;
+      font-size: 12px;
       font-weight: 700;
     }
 
@@ -378,7 +384,7 @@
       const currentYear = today.getFullYear();
       const currentMonth = today.getMonth();
 
-      let statementDateCurrentMonth = createSafeDate(currentYear, currentMonth, statementDay);
+      const statementDateCurrentMonth = createSafeDate(currentYear, currentMonth, statementDay);
 
       let statementDate;
       if (today >= statementDateCurrentMonth) {
@@ -394,10 +400,7 @@
 
       const dueDate = addDays(statementDate, Number(daysFromStatementToDue || 0));
 
-      return {
-        statementDate,
-        dueDate
-      };
+      return { statementDate, dueDate };
     }
 
     function loadUsageMap() {
@@ -459,6 +462,65 @@
       return Math.round(diffMs / (1000 * 60 * 60 * 24));
     }
 
+    function getSharedGroupMap(cards) {
+      const groups = {};
+
+      cards.forEach(card => {
+        if (!card.sharedLimitGroup) return;
+
+        if (!groups[card.sharedLimitGroup]) {
+          groups[card.sharedLimitGroup] = {
+            groupId: card.sharedLimitGroup,
+            limit: Number(card.limit || 0),
+            totalUsed: 0,
+            cards: []
+          };
+        }
+
+        groups[card.sharedLimitGroup].totalUsed += Number(card.usedAmount || 0);
+        groups[card.sharedLimitGroup].cards.push(card.id);
+      });
+
+      return groups;
+    }
+
+    function getEffectiveLimitInfo(card, sharedGroupMap) {
+      if (card.sharedLimitGroup && sharedGroupMap[card.sharedLimitGroup]) {
+        const group = sharedGroupMap[card.sharedLimitGroup];
+        return {
+          isShared: true,
+          effectiveLimit: Number(group.limit || 0),
+          effectiveUsed: Number(group.totalUsed || 0),
+          effectiveAvailable: Number(group.limit || 0) - Number(group.totalUsed || 0)
+        };
+      }
+
+      return {
+        isShared: false,
+        effectiveLimit: Number(card.limit || 0),
+        effectiveUsed: Number(card.usedAmount || 0),
+        effectiveAvailable: Number(card.limit || 0) - Number(card.usedAmount || 0)
+      };
+    }
+
+    function getUniqueTotalLimit(cards) {
+      const sharedSeen = new Set();
+      let total = 0;
+
+      cards.forEach(card => {
+        if (card.sharedLimitGroup) {
+          if (!sharedSeen.has(card.sharedLimitGroup)) {
+            sharedSeen.add(card.sharedLimitGroup);
+            total += Number(card.limit || 0);
+          }
+        } else {
+          total += Number(card.limit || 0);
+        }
+      });
+
+      return total;
+    }
+
     function getCardStatus(card) {
       const usedAmount = Number(card.usedAmount || 0);
       const dueInDays = Number(card.daysUntilDue ?? 999);
@@ -485,26 +547,39 @@
 
     function rankCardsForSpending(cards, plannedAmount) {
       const amount = Number(plannedAmount || 0);
+      const sharedGroupMap = getSharedGroupMap(cards);
 
       return cards
         .map(card => {
-          const limit = Number(card.limit || 0);
-          const used = Number(card.usedAmount || 0);
-          const available = limit - used;
-          const afterUsed = used + amount;
-          const afterUtilization = limit > 0 ? (afterUsed / limit) * 100 : 9999;
-          const canUse = available >= amount;
+          const limitInfo = getEffectiveLimitInfo(card, sharedGroupMap);
+          const ownUsed = Number(card.usedAmount || 0);
+          const afterOwnUsed = ownUsed + amount;
+          const afterEffectiveUsed = limitInfo.isShared
+            ? limitInfo.effectiveUsed + amount
+            : afterOwnUsed;
+          const afterUtilization = limitInfo.effectiveLimit > 0
+            ? (afterEffectiveUsed / limitInfo.effectiveLimit) * 100
+            : 9999;
+          const canUse = limitInfo.effectiveAvailable >= amount;
 
           let score = 0;
           if (canUse) score += 1000;
+
           score -= afterUtilization;
-          score += available / 1000;
+          score += limitInfo.effectiveAvailable / 1000;
+
+          if (card.daysUntilDue <= 7) score -= 80;
+          else if (card.daysUntilDue <= 14) score -= 30;
 
           return {
             ...card,
-            available,
+            isShared: limitInfo.isShared,
+            effectiveLimit: limitInfo.effectiveLimit,
+            effectiveUsed: limitInfo.effectiveUsed,
+            available: limitInfo.effectiveAvailable,
             canUse,
-            afterUsed,
+            afterOwnUsed,
+            afterEffectiveUsed,
             afterUtilization,
             score
           };
@@ -538,18 +613,28 @@
 
     function buildSpendReasons(card, plannedAmount) {
       const reasons = [];
-      const available = Number(card.available || 0);
-      const afterUtilization = Number(card.afterUtilization || 0);
 
-      reasons.push(`วงเงินคงเหลือเพียงพอสำหรับยอด ${formatBaht(plannedAmount)} บาท`);
-      reasons.push(`หลังใช้จะเหลือวงเงินประมาณ ${formatBaht(available - plannedAmount)} บาท`);
-
-      if (afterUtilization < 30) {
-        reasons.push(`หลังใช้แล้วยังใช้วงเงินในระดับค่อนข้างต่ำ (${afterUtilization.toFixed(1)}%)`);
-      } else if (afterUtilization < 80) {
-        reasons.push(`หลังใช้แล้วยังอยู่ในระดับที่รับได้ (${afterUtilization.toFixed(1)}%)`);
+      if (card.isShared) {
+        reasons.push(`บัตรนี้ใช้วงเงินร่วม และขณะนี้ยังเหลือวงเงินร่วม ${formatBaht(card.available)} บาท`);
       } else {
-        reasons.push(`หลังใช้แล้วการใช้วงเงินจะค่อนข้างสูง (${afterUtilization.toFixed(1)}%)`);
+        reasons.push(`วงเงินคงเหลือของบัตรนี้เพียงพอสำหรับยอด ${formatBaht(plannedAmount)} บาท`);
+      }
+
+      const remainingAfterUse = card.available - plannedAmount;
+      reasons.push(`หลังใช้แล้วจะเหลือวงเงินสำหรับรูดต่อประมาณ ${formatBaht(remainingAfterUse)} บาท`);
+
+      if (card.afterUtilization < 30) {
+        reasons.push(`หลังใช้แล้วยังใช้วงเงินในระดับค่อนข้างต่ำ (${card.afterUtilization.toFixed(1)}%)`);
+      } else if (card.afterUtilization < 80) {
+        reasons.push(`หลังใช้แล้วยังอยู่ในระดับที่รับได้ (${card.afterUtilization.toFixed(1)}%)`);
+      } else {
+        reasons.push(`หลังใช้แล้วการใช้วงเงินจะค่อนข้างสูง (${card.afterUtilization.toFixed(1)}%)`);
+      }
+
+      if (card.daysUntilDue <= 7) {
+        reasons.push(`อย่างไรก็ตาม บัตรนี้ใกล้ครบกำหนดชำระ เหลือประมาณ ${card.daysUntilDue} วัน`);
+      } else {
+        reasons.push(`ยังไม่ใกล้วันครบกำหนดชำระมากนัก เหลือประมาณ ${card.daysUntilDue} วัน`);
       }
 
       return reasons;
@@ -584,8 +669,8 @@
       resultEl.innerHTML = `
         <div><strong>แนะนำ:</strong> ${best.name}</div>
         <div>ยอดที่ต้องการใช้: ${formatBaht(plannedAmount)} บาท</div>
-        <div>ยอดการใช้งานปัจจุบัน: ${formatBaht(best.usedAmount)} บาท</div>
-        <div>ยอดการใช้งานหลังใช้: ${formatBaht(best.afterUsed)} บาท</div>
+        <div>ยอดการใช้งานปัจจุบันของบัตรนี้: ${formatBaht(best.usedAmount)} บาท</div>
+        <div>ยอดการใช้งานของบัตรนี้หลังใช้: ${formatBaht(best.afterOwnUsed)} บาท</div>
         <div>การใช้วงเงินหลังรูด: ${best.afterUtilization.toFixed(1)}%</div>
         <ul class="reason-list">
           ${reasons.map(reason => `<li>${reason}</li>`).join("")}
@@ -652,7 +737,7 @@
     function renderSummary(cards) {
       const summaryContainer = document.getElementById("summaryContainer");
 
-      const totalLimit = cards.reduce((sum, card) => sum + Number(card.limit || 0), 0);
+      const totalLimit = getUniqueTotalLimit(cards);
       const totalUsed = cards.reduce((sum, card) => sum + Number(card.usedAmount || 0), 0);
       const overallUsagePercent = totalLimit > 0 ? (totalUsed / totalLimit) * 100 : 0;
 
@@ -666,7 +751,7 @@
         <div class="summary-box">
           <h3>การใช้วงเงินรวม</h3>
           <div class="summary-value">${overallUsagePercent.toFixed(1)}%</div>
-          <div class="summary-sub">เทียบจากวงเงินรวมทั้งหมด ${formatBaht(totalLimit)} บาท</div>
+          <div class="summary-sub">เทียบจากวงเงินรวมที่นับแบบไม่ซ้ำ ${formatBaht(totalLimit)} บาท</div>
         </div>
       `;
     }
@@ -674,17 +759,12 @@
     function enrichCards(cards) {
       return cards.map(card => {
         const cycle = getBillingCycleDates(card.statementDay, card.daysFromStatementToDue);
-        const dueDateText = formatThaiDate(cycle.dueDate);
-        const statementDateText = formatThaiDate(cycle.statementDate);
-        const dueDay = cycle.dueDate.getDate();
-        const daysUntilDue = getDaysUntilDate(cycle.dueDate);
-
         return {
           ...card,
-          statementDateText,
-          dueDateText,
-          dueDay,
-          daysUntilDue
+          statementDateText: formatThaiDate(cycle.statementDate),
+          dueDateText: formatThaiDate(cycle.dueDate),
+          dueDay: cycle.dueDate.getDate(),
+          daysUntilDue: getDaysUntilDate(cycle.dueDate)
         };
       });
     }
@@ -692,28 +772,34 @@
     function renderDashboard() {
       const cards = enrichCards(getCardsWithLocalUsage(cardsData));
       const container = document.getElementById("cardsContainer");
+      const sharedGroupMap = getSharedGroupMap(cards);
 
       renderSummary(cards);
 
       container.innerHTML = cards.map(card => {
-        const limit = Number(card.limit || 0);
+        const ownLimit = Number(card.limit || 0);
         const usedAmount = Math.max(0, Number(card.usedAmount || 0));
-        const available = limit - usedAmount;
-        const usagePercent = limit > 0 ? (usedAmount / limit) * 100 : 0;
+        const limitInfo = getEffectiveLimitInfo(card, sharedGroupMap);
+        const available = limitInfo.effectiveAvailable;
+        const usagePercent = limitInfo.effectiveLimit > 0
+          ? (limitInfo.effectiveUsed / limitInfo.effectiveLimit) * 100
+          : 0;
         const status = getCardStatus(card);
 
         return `
           <div class="card-item">
             <div class="card-badge">${card.bank || "บัตรเครดิต"}${card.last4 ? " • " + card.last4 : ""}</div>
             <h3>${card.name}</h3>
-            <p>วงเงิน: <span class="card-row-strong">${formatBaht(limit)}</span> บาท</p>
-            <p>ยอดการใช้งาน: <span class="card-row-strong">${formatBaht(usedAmount)}</span> บาท</p>
-            <p>วงเงินคงเหลือ: <span class="card-row-strong">${formatBaht(available)}</span> บาท</p>
-            <p>การใช้วงเงิน: <span class="card-row-strong">${usagePercent.toFixed(1)}%</span></p>
+            <p>วงเงิน: <span class="card-row-strong">${formatBaht(ownLimit)}</span> บาท</p>
+            <p>ยอดการใช้งานของบัตรนี้: <span class="card-row-strong">${formatBaht(usedAmount)}</span> บาท</p>
+            <p>วงเงินที่ใช้คำนวณการรูด: <span class="card-row-strong">${formatBaht(limitInfo.effectiveLimit)}</span> บาท</p>
+            <p>วงเงินคงเหลือสำหรับรูด: <span class="card-row-strong">${formatBaht(available)}</span> บาท</p>
+            <p>การใช้วงเงินสำหรับการรูด: <span class="card-row-strong">${usagePercent.toFixed(1)}%</span></p>
             <p>วันสรุปยอด: ${card.statementDateText}</p>
             <p>วันครบกำหนดชำระ: ${card.dueDateText}</p>
             <p>ช่วงวันจากสรุปยอดถึงกำหนดชำระ: ${card.daysFromStatementToDue || "-"} วัน</p>
             <p>สถานะ: <span class="${status.className}">${status.text}</span></p>
+            ${card.sharedLimitGroup ? `<p class="shared-note">${card.sharedLimitLabel || "บัตรนี้ใช้วงเงินร่วม"}</p>` : ""}
 
             <button
               class="card-action-btn"
@@ -782,7 +868,9 @@
           limit: Number(card.limit || 0),
           usedAmount: Math.max(0, Number(card.usedAmount || 0)),
           statementDay: Number(card.statementDay || 0),
-          daysFromStatementToDue: Number(card.daysFromStatementToDue || 0)
+          daysFromStatementToDue: Number(card.daysFromStatementToDue || 0),
+          sharedLimitGroup: card.sharedLimitGroup || "",
+          sharedLimitLabel: card.sharedLimitLabel || ""
         }));
 
         setCurrentDateHeader();

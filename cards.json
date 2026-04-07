@@ -7,7 +7,9 @@
     "limit": 120000,
     "usedAmount": 0,
     "statementDay": 12,
-    "daysFromStatementToDue": 20
+    "daysFromStatementToDue": 20,
+    "sharedLimitGroup": "krungsri_shared",
+    "sharedLimitLabel": "วงเงินใช้ร่วมกับ กรุงศรี HomePro Visa Platinum"
   },
   {
     "id": "card2",
@@ -17,7 +19,9 @@
     "limit": 120000,
     "usedAmount": 90805.70,
     "statementDay": 12,
-    "daysFromStatementToDue": 20
+    "daysFromStatementToDue": 20,
+    "sharedLimitGroup": "krungsri_shared",
+    "sharedLimitLabel": "วงเงินใช้ร่วมกับ กรุงศรี NOW Platinum"
   },
   {
     "id": "card3",
