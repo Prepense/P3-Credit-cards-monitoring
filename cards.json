@@ -1,0 +1,31 @@
+{
+  "updatedAt": "2026-04-07 15:10",
+  "cards": [
+    {
+      "id": "ktc-01",
+      "bank": "KTC",
+      "name": "KTC Main",
+      "creditLimit": 50000,
+      "statementDay": 18,
+      "dueDay": 3,
+      "usedAmount": 12500,
+      "minPayment": 1250,
+      "fullPayment": 12500,
+      "status": "normal",
+      "note": ""
+    },
+    {
+      "id": "scb-01",
+      "bank": "SCB",
+      "name": "SCB Online",
+      "creditLimit": 30000,
+      "statementDay": 22,
+      "dueDay": 7,
+      "usedAmount": 8200,
+      "minPayment": 820,
+      "fullPayment": 8200,
+      "status": "watch",
+      "note": "Near due date"
+    }
+  ]
+}

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>P3 Credit Cards Monitoring</title>
+  <style>
+    :root {
+      --bg: #f3f5f7;
+      --card-bg: #ffffff;
+      --summary-bg: #eef4ff;
+      --border: #dbe3ec;
+      --text-main: #1f2937;
+      --text-soft: #667085;
+      --blue-main: #114b8b;
+      --blue-soft: #eaf2ff;
+      --green: #18843a;
+      --orange: #c78311;
+      --purple: #8d5bd1;
+      --gray: #6b7280;
+      --shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text-main);
+    }
+
+    .container {
+      max-width: 1450px;
+      margin: 0 auto;
+      padding: 22px 18px 38px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--blue-main);
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      font-size: 1.2rem;
+      color: var(--text-soft);
+    }
+
+    .meta-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: center;
+      margin-top: 12px;
+      font-size: 1rem;
+      color: #4b5563;
+    }
+
+    .refresh-history-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .history-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--blue-main);
+      background: #eef4ff;
+      border: 1px solid rgba(17, 75, 139, 0.16);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid #e6ecf3;
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      min-height: 350px;
+    }
+
+    .summary-card {
+      background: var(--summary-bg);
+    }
+
+    .panel-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--blue-main);
+      margin: 0 0 12px 0;
+    }
+
+    .summary-top-boxes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .summary-mini-box {
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(0,0,0,0.04);
+      border-radius: 12px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+
+    .summary-mini-label {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #667085;
+      margin-bottom: 4px;
+    }
+
+    .summary-mini-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .summary-normal { color: var(--green); }
+    .summary-watch  { color: var(--orange); }
+    .summary-alert  { color: var(--purple); }
+
+    .card-title-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .card-title-badge {
+      display: inline-block;
+      background: var(--blue-soft);
+      color: var(--blue-main);
+      font-size: 1.35rem;
+      font-weight: 700;
+      line-height: 1.15;
+      text-align: center;
+      padding: 6px 16px;
+      border-radius: 12px;
+      min-width: 160px;
+      border: 1px solid #d7e6ff;
+    }
+
+    .main-values {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+      margin-bottom: 8px;
+    }
+
+    .metric-box {
+      text-align: center;
+    }
+
+    .label {
+      font-size: 0.95rem;
+      color: #5d6675;
+      margin-bottom: 5px;
+    }
+
+    .value {
+      font-weight: 700;
+      line-height: 1.1;
+      font-size: 1.6rem;
+      color: #0f172a;
+    }
+
+    .mid-divider {
+      border-top: 1px dashed #dbe3ec;
+      margin: 0 0 8px;
+    }
+
+    .detail-box {
+      width: 100%;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 10px 12px 8px;
+      margin-bottom: 10px;
+    }
+
+    .detail-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px dashed #e5e7eb;
+    }
+
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+
+    .detail-name {
+      color: #475569;
+      font-size: 1rem;
+    }
+
+    .detail-value {
+      font-weight: 700;
+      color: #0f172a;
+      text-align: right;
+      font-size: 1.05rem;
+    }
+
+    .footer-row {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #edf2f7;
+      align-items: center;
+      margin-top: auto;
+    }
+
+    .footer {
+      font-size: 0.96rem;
+      color: #4b5563;
+    }
+
+    .status-normal,
+    .status-paid {
+      color: var(--green);
+      font-weight: 800;
+    }
+
+    .status-watch,
+    .status-due {
+      color: var(--orange);
+      font-weight: 800;
+    }
+
+    .status-alert,
+    .status-overdue {
+      color: var(--purple);
+      font-weight: 800;
+    }
+
+    .status-unknown {
+      color: var(--gray);
+      font-weight: 800;
+    }
+
+    .summary-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
+      margin-top: 8px;
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 10px;
+      min-height: 30px;
+      padding: 6px 0;
+      border-bottom: 1px dashed rgba(17, 75, 139, 0.12);
+    }
+
+    .summary-row:last-child {
+      border-bottom: none;
+    }
+
+    .summary-card-name {
+      font-size: 1rem;
+      font-weight: 400;
+      color: #475569;
+      text-align: left;
+    }
+
+    .summary-card-value {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #0f172a;
+      text-align: right;
+      line-height: 1;
+    }
+
+    .empty-text {
+      color: #6b7280;
+      text-align: center;
+      padding: 24px 0;
+    }
+
+    @media (max-width: 640px) {
+      .title {
+        font-size: 1.55rem;
+      }
+
+      .summary-top-boxes,
+      .main-values {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 class="title">Credit Cards Monitoring</h1>
+      <div class="subtitle">P3 Dashboard</div>
+
+      <div class="meta-row">
+        <div id="thaiDateTime">วันที่ -- เวลา --</div>
+        <div class="refresh-history-row">
+          <div id="pageRefresh">Last refresh: --</div>
+          <a href="history.html" class="history-btn" title="View History">History</a>
+        </div>
+      </div>
+    </div>
+
+    <div id="roomGrid" class="grid"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
