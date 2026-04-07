@@ -5,353 +5,646 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>P3 Credit Cards Monitoring</title>
   <style>
-    :root {
-      --bg: #f3f5f7;
-      --card-bg: #ffffff;
-      --summary-bg: #eef4ff;
-      --border: #dbe3ec;
-      --text-main: #1f2937;
-      --text-soft: #667085;
-      --blue-main: #114b8b;
-      --blue-soft: #eaf2ff;
-      --green: #18843a;
-      --orange: #c78311;
-      --purple: #8d5bd1;
-      --gray: #6b7280;
-      --shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-    }
-
     * {
       box-sizing: border-box;
     }
 
     body {
       margin: 0;
-      background: var(--bg);
       font-family: Arial, Helvetica, sans-serif;
-      color: var(--text-main);
+      background: #f5f7fb;
+      color: #1f2937;
     }
 
     .container {
-      max-width: 1450px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 22px 18px 38px;
+      padding: 24px 16px 40px;
     }
 
-    .header {
-      text-align: center;
+    .page-header {
       margin-bottom: 20px;
     }
 
-    .title {
+    .page-header h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+
+    .page-header p {
       margin: 0;
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--blue-main);
+      color: #6b7280;
+      line-height: 1.6;
     }
 
-    .subtitle {
-      margin-top: 6px;
-      font-size: 1.2rem;
-      color: var(--text-soft);
-    }
-
-    .meta-row {
+    .top-actions {
       display: flex;
-      flex-direction: column;
-      gap: 4px;
-      align-items: center;
-      margin-top: 12px;
-      font-size: 1rem;
-      color: #4b5563;
-    }
-
-    .refresh-history-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
       flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .decision-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      margin: 22px 0;
+    }
+
+    .decision-box,
+    .summary-box,
+    .card-item {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    }
+
+    .decision-box h3,
+    .summary-box h3,
+    .card-item h3 {
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+
+    .decision-input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .decision-input-row input {
+      flex: 1 1 180px;
+      min-width: 180px;
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 15px;
+      background: #fff;
+    }
+
+    .decision-result {
+      line-height: 1.7;
+      font-size: 15px;
+      color: #111827;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .summary-value {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .summary-sub {
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .card-item p {
+      margin: 8px 0;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .card-row-strong {
+      font-weight: 700;
+    }
+
+    .card-action-btn {
+      margin-top: 10px;
+      padding: 9px 13px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #2563eb;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .card-badge {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .note-box {
+      margin-top: 20px;
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      line-height: 1.7;
+      color: #374151;
+      font-size: 14px;
+    }
+
+    .update-dialog {
+      border: none;
+      border-radius: 16px;
+      padding: 20px;
+      width: min(92vw, 420px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .update-dialog::backdrop {
+      background: rgba(0, 0, 0, 0.35);
+    }
+
+    .update-dialog h3 {
+      margin-top: 0;
       margin-bottom: 14px;
     }
 
-    .history-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 10px;
-      text-decoration: none;
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--blue-main);
-      background: #eef4ff;
-      border: 1px solid rgba(17, 75, 139, 0.16);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 18px;
-      align-items: start;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid #e6ecf3;
-      border-radius: 18px;
-      box-shadow: var(--shadow);
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      min-height: 350px;
-    }
-
-    .summary-card {
-      background: var(--summary-bg);
-    }
-
-    .panel-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--blue-main);
-      margin: 0 0 12px 0;
-    }
-
-    .summary-top-boxes {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .summary-mini-box {
-      background: rgba(255,255,255,0.7);
-      border: 1px solid rgba(0,0,0,0.04);
-      border-radius: 12px;
-      padding: 8px 6px;
-      text-align: center;
-    }
-
-    .summary-mini-label {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: #667085;
-      margin-bottom: 4px;
-    }
-
-    .summary-mini-value {
-      font-size: 1.5rem;
-      font-weight: 800;
-      line-height: 1;
-    }
-
-    .summary-normal { color: var(--green); }
-    .summary-watch  { color: var(--orange); }
-    .summary-alert  { color: var(--purple); }
-
-    .card-title-wrap {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 10px;
-    }
-
-    .card-title-badge {
-      display: inline-block;
-      background: var(--blue-soft);
-      color: var(--blue-main);
-      font-size: 1.35rem;
-      font-weight: 700;
-      line-height: 1.15;
-      text-align: center;
-      padding: 6px 16px;
-      border-radius: 12px;
-      min-width: 160px;
-      border: 1px solid #d7e6ff;
-    }
-
-    .main-values {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      border-top: 1px solid var(--border);
-      padding-top: 12px;
+    .update-dialog label {
+      display: block;
       margin-bottom: 8px;
+      font-weight: 600;
     }
 
-    .metric-box {
-      text-align: center;
-    }
-
-    .label {
-      font-size: 0.95rem;
-      color: #5d6675;
-      margin-bottom: 5px;
-    }
-
-    .value {
-      font-weight: 700;
-      line-height: 1.1;
-      font-size: 1.6rem;
-      color: #0f172a;
-    }
-
-    .mid-divider {
-      border-top: 1px dashed #dbe3ec;
-      margin: 0 0 8px;
-    }
-
-    .detail-box {
+    .update-dialog input {
       width: 100%;
-      background: #f8fafc;
-      border: 1px solid #e5e7eb;
-      border-radius: 14px;
-      padding: 10px 12px 8px;
-      margin-bottom: 10px;
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 16px;
+      background: #fff;
     }
 
-    .detail-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px dashed #e5e7eb;
-    }
-
-    .detail-row:last-child {
-      border-bottom: none;
-    }
-
-    .detail-name {
-      color: #475569;
-      font-size: 1rem;
-    }
-
-    .detail-value {
-      font-weight: 700;
-      color: #0f172a;
-      text-align: right;
-      font-size: 1.05rem;
-    }
-
-    .footer-row {
-      width: 100%;
+    .dialog-actions {
+      margin-top: 16px;
       display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding-top: 10px;
-      border-top: 1px solid #edf2f7;
-      align-items: center;
-      margin-top: auto;
-    }
-
-    .footer {
-      font-size: 0.96rem;
-      color: #4b5563;
-    }
-
-    .status-normal,
-    .status-paid {
-      color: var(--green);
-      font-weight: 800;
-    }
-
-    .status-watch,
-    .status-due {
-      color: var(--orange);
-      font-weight: 800;
-    }
-
-    .status-alert,
-    .status-overdue {
-      color: var(--purple);
-      font-weight: 800;
-    }
-
-    .status-unknown {
-      color: var(--gray);
-      font-weight: 800;
-    }
-
-    .summary-list {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 4px;
-      margin-top: 8px;
-    }
-
-    .summary-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      align-items: center;
+      justify-content: flex-end;
       gap: 10px;
-      min-height: 30px;
-      padding: 6px 0;
-      border-bottom: 1px dashed rgba(17, 75, 139, 0.12);
     }
 
-    .summary-row:last-child {
-      border-bottom: none;
-    }
-
-    .summary-card-name {
-      font-size: 1rem;
-      font-weight: 400;
-      color: #475569;
-      text-align: left;
-    }
-
-    .summary-card-value {
-      font-size: 1.05rem;
+    .status-good {
+      color: #047857;
       font-weight: 700;
-      color: #0f172a;
-      text-align: right;
-      line-height: 1;
     }
 
-    .empty-text {
-      color: #6b7280;
-      text-align: center;
-      padding: 24px 0;
+    .status-warn {
+      color: #b45309;
+      font-weight: 700;
+    }
+
+    .status-high {
+      color: #b91c1c;
+      font-weight: 700;
     }
 
     @media (max-width: 640px) {
-      .title {
-        font-size: 1.55rem;
+      .page-header h1 {
+        font-size: 24px;
       }
 
-      .summary-top-boxes,
-      .main-values {
-        grid-template-columns: 1fr;
-      }
-
-      .footer-row {
-        flex-direction: column;
-        align-items: flex-start;
+      .summary-value {
+        font-size: 22px;
       }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1 class="title">Credit Cards Monitoring</h1>
-      <div class="subtitle">P3 Dashboard</div>
+    <div class="page-header">
+      <h1>Dashboard ติดตามบัตรเครดิต</h1>
+      <p>
+        ใช้สำหรับอัปเดตยอดการใช้งานของแต่ละบัตร และช่วยตัดสินใจว่า
+        หากจะใช้บัตรยอดหนึ่งควรใช้บัตรไหนดี และหากจะชำระเงินควรชำระบัตรใดก่อน
+      </p>
 
-      <div class="meta-row">
-        <div id="thaiDateTime">วันที่ -- เวลา --</div>
-        <div class="refresh-history-row">
-          <div id="pageRefresh">Last refresh: --</div>
-          <a href="history.html" class="history-btn" title="View History">History</a>
+      <div class="top-actions">
+        <button class="btn btn-secondary" id="resetLocalDataBtn">ล้างยอดที่บันทึกไว้ในเครื่องนี้</button>
+      </div>
+    </div>
+
+    <div class="decision-section">
+      <div class="decision-box">
+        <h3>ถ้าจะใช้บัตรยอดเท่านี้ ควรใช้บัตรไหนดี</h3>
+
+        <div class="decision-input-row">
+          <input
+            type="number"
+            id="plannedSpendInput"
+            min="0"
+            step="0.01"
+            placeholder="กรอกยอดที่ต้องการใช้ (บาท)"
+          />
+          <button type="button" class="btn btn-primary" id="plannedSpendBtn">คำนวณ</button>
+        </div>
+
+        <div id="spendRecommendationResult" class="decision-result">
+          กรุณากรอกยอดที่ต้องการใช้
+        </div>
+      </div>
+
+      <div class="decision-box">
+        <h3>วันนี้ควรชำระบัตรไหนดี</h3>
+        <div id="paymentRecommendationResult" class="decision-result">
+          ระบบจะแนะนำจากยอดใช้งานปัจจุบันและวันครบกำหนดชำระ
         </div>
       </div>
     </div>
 
-    <div id="roomGrid" class="grid"></div>
+    <div class="summary-grid" id="summaryContainer">
+      <!-- summary render -->
+    </div>
+
+    <div class="cards-grid" id="cardsContainer">
+      <!-- cards render -->
+    </div>
+
+    <div class="note-box">
+      <strong>หมายเหตุ:</strong>
+      ยอดที่อัปเดตจะถูกเก็บไว้ใน <code>localStorage</code> ของเบราว์เซอร์เครื่องนี้เท่านั้น
+      หากเปิดจากเครื่องอื่นหรือเคลียร์ข้อมูลเบราว์เซอร์ ยอดที่บันทึกไว้จะหายไป
+    </div>
   </div>
 
-  <script src="app.js"></script>
+  <dialog id="updateDialog" class="update-dialog">
+    <form id="updateForm">
+      <h3 id="dialogTitle">อัปเดตยอดการใช้งาน</h3>
+
+      <label for="usedAmountInput">ยอดการใช้งานปัจจุบัน (บาท)</label>
+      <input
+        type="number"
+        id="usedAmountInput"
+        min="0"
+        step="0.01"
+        required
+      />
+
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" id="cancelDialogBtn">ยกเลิก</button>
+        <button type="submit" class="btn btn-primary">บันทึก</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    const STORAGE_KEY = "p3_card_usage";
+    let editingCardId = null;
+    let cardsData = [];
+
+    function formatBaht(value) {
+      return Number(value || 0).toLocaleString("th-TH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function loadUsageMap() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveUsageMap(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function getLocalUsedAmount(cardId, fallback = 0) {
+      const usageMap = loadUsageMap();
+      return Number(usageMap[cardId]?.usedAmount ?? fallback ?? 0);
+    }
+
+    function setLocalUsedAmount(cardId, usedAmount) {
+      const usageMap = loadUsageMap();
+      usageMap[cardId] = {
+        ...(usageMap[cardId] || {}),
+        usedAmount: Number(usedAmount) || 0
+      };
+      saveUsageMap(usageMap);
+    }
+
+    function getCardsWithLocalUsage(cards) {
+      return cards.map(card => {
+        return {
+          ...card,
+          usedAmount: getLocalUsedAmount(card.id, card.usedAmount || 0)
+        };
+      });
+    }
+
+    function openUpdateDialog(cardId, cardName, currentUsedAmount) {
+      editingCardId = cardId;
+      document.getElementById("dialogTitle").textContent = `อัปเดตยอดการใช้งาน - ${cardName}`;
+      document.getElementById("usedAmountInput").value = currentUsedAmount || 0;
+      document.getElementById("updateDialog").showModal();
+    }
+
+    function closeUpdateDialog() {
+      editingCardId = null;
+      document.getElementById("updateDialog").close();
+    }
+
+    function getCutoffStatus(usagePercent) {
+      if (usagePercent < 30) {
+        return {
+          text: "ดี",
+          className: "status-good"
+        };
+      }
+      if (usagePercent < 80) {
+        return {
+          text: "เฝ้าระวัง",
+          className: "status-warn"
+        };
+      }
+      return {
+        text: "สูง",
+        className: "status-high"
+      };
+    }
+
+    function rankCardsForSpending(cards, plannedAmount) {
+      const amount = Number(plannedAmount || 0);
+
+      return cards
+        .map(card => {
+          const limit = Number(card.limit || 0);
+          const used = Number(card.usedAmount || 0);
+          const available = limit - used;
+          const afterUsed = used + amount;
+          const afterUtilization = limit > 0 ? (afterUsed / limit) * 100 : 9999;
+          const canUse = available >= amount;
+
+          let score = 0;
+          if (canUse) score += 1000;
+
+          score -= afterUtilization;
+          score += available / 1000;
+
+          return {
+            ...card,
+            available,
+            canUse,
+            afterUsed,
+            afterUtilization,
+            score
+          };
+        })
+        .filter(card => card.canUse)
+        .sort((a, b) => b.score - a.score);
+    }
+
+    function getDaysUntilDue(dueDay) {
+      const today = new Date();
+      const currentDay = today.getDate();
+      const due = Number(dueDay || 0);
+
+      if (!due) return 999;
+
+      let diff = due - currentDay;
+      if (diff < 0) diff += 30;
+
+      return diff;
+    }
+
+    function rankCardsForPayment(cards) {
+      return cards
+        .map(card => {
+          const limit = Number(card.limit || 0);
+          const used = Number(card.usedAmount || 0);
+          const utilization = limit > 0 ? (used / limit) * 100 : 0;
+          const daysUntilDue = getDaysUntilDue(card.dueDay);
+
+          let score = 0;
+          score += Math.max(0, 40 - daysUntilDue) * 20;
+          score += used / 100;
+          score += utilization * 2;
+
+          return {
+            ...card,
+            utilization,
+            daysUntilDue,
+            score
+          };
+        })
+        .filter(card => Number(card.usedAmount || 0) > 0)
+        .sort((a, b) => b.score - a.score);
+    }
+
+    function renderSpendRecommendation(cards) {
+      const resultEl = document.getElementById("spendRecommendationResult");
+      const inputEl = document.getElementById("plannedSpendInput");
+
+      if (!resultEl || !inputEl) return;
+
+      const plannedAmount = Number(inputEl.value || 0);
+
+      if (!plannedAmount || plannedAmount <= 0) {
+        resultEl.innerHTML = `กรุณากรอกยอดที่ต้องการใช้`;
+        return;
+      }
+
+      const ranked = rankCardsForSpending(cards, plannedAmount);
+
+      if (ranked.length === 0) {
+        resultEl.innerHTML = `
+          ไม่พบบัตรที่มีวงเงินคงเหลือเพียงพอสำหรับยอด
+          <strong>${formatBaht(plannedAmount)}</strong> บาท
+        `;
+        return;
+      }
+
+      const best = ranked[0];
+
+      resultEl.innerHTML = `
+        <div><strong>แนะนำ:</strong> ${best.name}</div>
+        <div>ยอดที่ต้องการใช้: ${formatBaht(plannedAmount)} บาท</div>
+        <div>วงเงินคงเหลือก่อนใช้: ${formatBaht(best.available)} บาท</div>
+        <div>ยอดใช้งานหลังใช้: ${formatBaht(best.afterUsed)} บาท</div>
+        <div>การใช้วงเงินหลังรูด: ${best.afterUtilization.toFixed(1)}%</div>
+      `;
+    }
+
+    function renderPaymentRecommendation(cards) {
+      const resultEl = document.getElementById("paymentRecommendationResult");
+      if (!resultEl) return;
+
+      const ranked = rankCardsForPayment(cards);
+
+      if (!ranked.length) {
+        resultEl.innerHTML = `ยังไม่มียอดใช้งานค้างชำระ`;
+        return;
+      }
+
+      const best = ranked[0];
+
+      resultEl.innerHTML = `
+        <div><strong>ควรพิจารณาชำระก่อน:</strong> ${best.name}</div>
+        <div>ยอดใช้งานปัจจุบัน: ${formatBaht(best.usedAmount)} บาท</div>
+        <div>การใช้วงเงิน: ${best.utilization.toFixed(1)}%</div>
+        <div>ใกล้ครบกำหนดในอีกประมาณ ${best.daysUntilDue} วัน</div>
+      `;
+    }
+
+    function renderSummary(cards) {
+      const summaryContainer = document.getElementById("summaryContainer");
+
+      const totalLimit = cards.reduce((sum, card) => sum + Number(card.limit || 0), 0);
+      const totalUsed = cards.reduce((sum, card) => sum + Number(card.usedAmount || 0), 0);
+      const totalAvailable = totalLimit - totalUsed;
+      const overallUsagePercent = totalLimit > 0 ? (totalUsed / totalLimit) * 100 : 0;
+
+      summaryContainer.innerHTML = `
+        <div class="summary-box">
+          <h3>ยอดใช้งานรวม</h3>
+          <div class="summary-value">${formatBaht(totalUsed)} บาท</div>
+          <div class="summary-sub">ยอดการใช้งานรวมของทุกบัตร</div>
+        </div>
+
+        <div class="summary-box">
+          <h3>วงเงินคงเหลือรวม</h3>
+          <div class="summary-value">${formatBaht(totalAvailable)} บาท</div>
+          <div class="summary-sub">วงเงินรวมที่ยังสามารถใช้งานได้</div>
+        </div>
+
+        <div class="summary-box">
+          <h3>การใช้วงเงินรวม</h3>
+          <div class="summary-value">${overallUsagePercent.toFixed(1)}%</div>
+          <div class="summary-sub">เทียบจากวงเงินรวมทั้งหมด ${formatBaht(totalLimit)} บาท</div>
+        </div>
+      `;
+    }
+
+    function renderDashboard() {
+      const cards = getCardsWithLocalUsage(cardsData);
+      const container = document.getElementById("cardsContainer");
+
+      renderSummary(cards);
+
+      container.innerHTML = cards.map(card => {
+        const limit = Number(card.limit || 0);
+        const usedAmount = Number(card.usedAmount || 0);
+        const available = limit - usedAmount;
+        const usagePercent = limit > 0 ? (usedAmount / limit) * 100 : 0;
+        const status = getCutoffStatus(usagePercent);
+
+        return `
+          <div class="card-item">
+            <div class="card-badge">${card.bank || "บัตรเครดิต"}</div>
+            <h3>${card.name}</h3>
+            <p>วงเงิน: <span class="card-row-strong">${formatBaht(limit)}</span> บาท</p>
+            <p>ยอดการใช้งาน: <span class="card-row-strong">${formatBaht(usedAmount)}</span> บาท</p>
+            <p>วงเงินคงเหลือ: <span class="card-row-strong">${formatBaht(available)}</span> บาท</p>
+            <p>การใช้วงเงิน: <span class="card-row-strong">${usagePercent.toFixed(1)}%</span></p>
+            <p>วันตัดรอบ: ${card.statementDay || "-"}</p>
+            <p>วันครบกำหนดชำระ: ${card.dueDay || "-"}</p>
+            <p>สถานะ: <span class="${status.className}">${status.text}</span></p>
+
+            <button
+              class="card-action-btn"
+              onclick="openUpdateDialog('${card.id}', '${card.name}', ${usedAmount})"
+            >
+              อัปเดตยอด
+            </button>
+          </div>
+        `;
+      }).join("");
+
+      renderSpendRecommendation(cards);
+      renderPaymentRecommendation(cards);
+    }
+
+    document.getElementById("cancelDialogBtn").addEventListener("click", closeUpdateDialog);
+
+    document.getElementById("updateForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      if (!editingCardId) return;
+
+      const usedAmount = Number(document.getElementById("usedAmountInput").value || 0);
+      setLocalUsedAmount(editingCardId, usedAmount);
+
+      closeUpdateDialog();
+      renderDashboard();
+    });
+
+    document.getElementById("plannedSpendBtn").addEventListener("click", function () {
+      const cards = getCardsWithLocalUsage(cardsData);
+      renderSpendRecommendation(cards);
+    });
+
+    document.getElementById("plannedSpendInput").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const cards = getCardsWithLocalUsage(cardsData);
+        renderSpendRecommendation(cards);
+      }
+    });
+
+    document.getElementById("resetLocalDataBtn").addEventListener("click", function () {
+      const confirmed = confirm("ต้องการล้างยอดที่บันทึกไว้ในเครื่องนี้ใช่หรือไม่?");
+      if (!confirmed) return;
+
+      localStorage.removeItem(STORAGE_KEY);
+      renderDashboard();
+    });
+
+    fetch("cards.json")
+      .then(res => {
+        if (!res.ok) {
+          throw new Error("ไม่สามารถโหลด cards.json ได้");
+        }
+        return res.json();
+      })
+      .then(data => {
+        cardsData = data;
+        renderDashboard();
+      })
+      .catch(error => {
+        document.getElementById("cardsContainer").innerHTML = `
+          <div class="card-item">
+            <h3>เกิดข้อผิดพลาด</h3>
+            <p>ไม่สามารถโหลดข้อมูลบัตรจาก cards.json ได้</p>
+            <p>${error.message}</p>
+          </div>
+        `;
+      });
+  </script>
 </body>
 </html>
