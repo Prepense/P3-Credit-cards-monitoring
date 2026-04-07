@@ -112,6 +112,15 @@
       font-size: 15px;
     }
 
+    .reason-list {
+      margin-top: 8px;
+      padding-left: 18px;
+    }
+
+    .reason-list li {
+      margin-bottom: 4px;
+    }
+
     .summary-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -229,10 +238,6 @@
     .status-high {
       color: #b91c1c;
       font-weight: 700;
-    }
-
-    .muted {
-      color: #6b7280;
     }
 
     @media (max-width: 640px) {
@@ -378,14 +383,42 @@
       document.getElementById("updateDialog").close();
     }
 
-    function getCutoffStatus(usagePercent) {
-      if (usagePercent < 30) {
-        return { text: "ดี", className: "status-good" };
+    function getDaysUntilDue(dueDay) {
+      const due = Number(dueDay || 0);
+      if (!due) return 999;
+
+      const today = new Date();
+      const currentDay = today.getDate();
+
+      let diff = due - currentDay;
+      if (diff < 0) diff += 30;
+
+      return diff;
+    }
+
+    function getCardStatus(card) {
+      const usedAmount = Number(card.usedAmount || 0);
+
+      if (usedAmount <= 0) {
+        return {
+          text: "ไม่มียอดต้องชำระ",
+          className: "status-good"
+        };
       }
-      if (usagePercent < 80) {
-        return { text: "เฝ้าระวัง", className: "status-warn" };
+
+      const daysUntilDue = getDaysUntilDue(card.dueDay);
+
+      if (Number(card.dueDay || 0) > 0 && daysUntilDue <= 7) {
+        return {
+          text: "ควรรีบชำระ",
+          className: "status-high"
+        };
       }
-      return { text: "สูง", className: "status-high" };
+
+      return {
+        text: "มียอดต้องชำระ",
+        className: "status-warn"
+      };
     }
 
     function rankCardsForSpending(cards, plannedAmount) {
@@ -416,19 +449,6 @@
         })
         .filter(card => card.canUse)
         .sort((a, b) => b.score - a.score);
-    }
-
-    function getDaysUntilDue(dueDay) {
-      const today = new Date();
-      const currentDay = today.getDate();
-      const due = Number(dueDay || 0);
-
-      if (!due) return 999;
-
-      let diff = due - currentDay;
-      if (diff < 0) diff += 30;
-
-      return diff;
     }
 
     function rankCardsForPayment(cards) {
@@ -491,6 +511,37 @@
       `;
     }
 
+    function buildPaymentReasons(card) {
+      const reasons = [];
+      const usedAmount = Number(card.usedAmount || 0);
+      const utilization = Number(card.utilization || 0);
+      const daysUntilDue = Number(card.daysUntilDue || 999);
+
+      if (usedAmount > 100000) {
+        reasons.push(`ยอดที่ต้องชำระค่อนข้างสูง (${formatBaht(usedAmount)} บาท)`);
+      } else if (usedAmount > 0) {
+        reasons.push(`มียอดที่ต้องชำระ (${formatBaht(usedAmount)} บาท)`);
+      }
+
+      if (utilization >= 80) {
+        reasons.push(`การใช้วงเงินสูงมาก (${utilization.toFixed(1)}%)`);
+      } else if (utilization >= 50) {
+        reasons.push(`การใช้วงเงินค่อนข้างสูง (${utilization.toFixed(1)}%)`);
+      } else {
+        reasons.push(`การใช้วงเงินอยู่ที่ ${utilization.toFixed(1)}%`);
+      }
+
+      if (daysUntilDue <= 3) {
+        reasons.push(`ใกล้วันครบกำหนดชำระมาก เหลือประมาณ ${daysUntilDue} วัน`);
+      } else if (daysUntilDue <= 7) {
+        reasons.push(`ใกล้วันครบกำหนดชำระ เหลือประมาณ ${daysUntilDue} วัน`);
+      } else {
+        reasons.push(`ยังเหลือเวลาถึงกำหนดชำระประมาณ ${daysUntilDue} วัน`);
+      }
+
+      return reasons;
+    }
+
     function renderPaymentRecommendation(cards) {
       const resultEl = document.getElementById("paymentRecommendationResult");
       if (!resultEl) return;
@@ -503,12 +554,16 @@
       }
 
       const best = ranked[0];
+      const reasons = buildPaymentReasons(best);
 
       resultEl.innerHTML = `
         <div><strong>ควรพิจารณาชำระก่อน:</strong> ${best.name}</div>
         <div>ยอดที่ต้องชำระปัจจุบัน: ${formatBaht(best.usedAmount)} บาท</div>
         <div>การใช้วงเงิน: ${best.utilization.toFixed(1)}%</div>
-        <div>ใกล้ครบกำหนดในอีกประมาณ ${best.daysUntilDue} วัน</div>
+        <div>วันครบกำหนดชำระ: ${best.dueDateText || "-"}</div>
+        <ul class="reason-list">
+          ${reasons.map(reason => `<li>${reason}</li>`).join("")}
+        </ul>
       `;
     }
 
@@ -552,7 +607,7 @@
         const usedAmount = Math.max(0, Number(card.usedAmount || 0));
         const available = limit - usedAmount;
         const usagePercent = limit > 0 ? (usedAmount / limit) * 100 : 0;
-        const status = getCutoffStatus(usagePercent);
+        const status = getCardStatus(card);
 
         return `
           <div class="card-item">
@@ -562,8 +617,8 @@
             <p>ยอดที่ต้องชำระ: <span class="card-row-strong">${formatBaht(usedAmount)}</span> บาท</p>
             <p>วงเงินคงเหลือ: <span class="card-row-strong">${formatBaht(available)}</span> บาท</p>
             <p>การใช้วงเงิน: <span class="card-row-strong">${usagePercent.toFixed(1)}%</span></p>
-            <p>วันสรุปยอด: ${card.statementDay || "-"}</p>
-            <p>วันครบกำหนดชำระ: ${card.dueDay || "-"}</p>
+            <p>วันสรุปยอด: ${card.statementDateText || "-"}</p>
+            <p>วันครบกำหนดชำระ: ${card.dueDateText || "-"}</p>
             <p>ช่วงวันจากสรุปยอดถึงกำหนดชำระ: ${card.daysFromStatementToDue || "-"} วัน</p>
             <p>สถานะ: <span class="${status.className}">${status.text}</span></p>
 
@@ -637,6 +692,8 @@
           usedAmount: Math.max(0, Number(card.usedAmount || 0)),
           statementDay: Number(card.statementDay || 0),
           dueDay: Number(card.dueDay || 0),
+          statementDateText: card.statementDateText || "-",
+          dueDateText: card.dueDateText || "-",
           daysFromStatementToDue: Number(card.daysFromStatementToDue || 0)
         }));
 

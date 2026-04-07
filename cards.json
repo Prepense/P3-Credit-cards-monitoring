@@ -6,8 +6,10 @@
     "last4": "5446",
     "limit": 120000,
     "usedAmount": 0,
-    "statementDay": 9,
-    "dueDay": 0,
+    "statementDay": 12,
+    "dueDay": 1,
+    "statementDateText": "12 มี.ค. 2569",
+    "dueDateText": "1 เม.ย. 2569",
     "daysFromStatementToDue": 20
   },
   {
@@ -19,6 +21,8 @@
     "usedAmount": 90805.70,
     "statementDay": 12,
     "dueDay": 4,
+    "statementDateText": "12 ก.พ. 2569",
+    "dueDateText": "4 มี.ค. 2569",
     "daysFromStatementToDue": 20
   },
   {
@@ -30,6 +34,8 @@
     "usedAmount": 137173.79,
     "statementDay": 23,
     "dueDay": 13,
+    "statementDateText": "23 พ.ย. 2568",
+    "dueDateText": "13 ธ.ค. 2568",
     "daysFromStatementToDue": 20
   },
   {
@@ -41,6 +47,8 @@
     "usedAmount": 62412.20,
     "statementDay": 18,
     "dueDay": 3,
+    "statementDateText": "18 พ.ย. 2568",
+    "dueDateText": "3 ธ.ค. 2568",
     "daysFromStatementToDue": 15
   },
   {
@@ -52,6 +60,8 @@
     "usedAmount": 108351.92,
     "statementDay": 14,
     "dueDay": 4,
+    "statementDateText": "14 พ.ย. 2568",
+    "dueDateText": "4 ธ.ค. 2568",
     "daysFromStatementToDue": 20
   },
   {
@@ -62,7 +72,9 @@
     "limit": 156000,
     "usedAmount": 0,
     "statementDay": 18,
-    "dueDay": 0,
+    "dueDay": 7,
+    "statementDateText": "18 มี.ค. 2569",
+    "dueDateText": "7 เม.ย. 2569",
     "daysFromStatementToDue": 20
   }
 ]
