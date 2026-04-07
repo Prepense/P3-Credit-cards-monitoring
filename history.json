@@ -1,0 +1,32 @@
+{
+  "updatedAt": "2026-04-07 15:30",
+  "history": [
+    {
+      "date": "2026-04-01",
+      "cardId": "ktc-01",
+      "cardName": "KTC Main",
+      "event": "payment",
+      "amount": 5000,
+      "status": "paid",
+      "note": "Partial payment"
+    },
+    {
+      "date": "2026-04-05",
+      "cardId": "scb-01",
+      "cardName": "SCB Online",
+      "event": "update",
+      "amount": 8200,
+      "status": "watch",
+      "note": "Updated latest amount"
+    },
+    {
+      "date": "2026-04-07",
+      "cardId": "scb-01",
+      "cardName": "SCB Online",
+      "event": "due",
+      "amount": 8200,
+      "status": "due",
+      "note": "Near due date"
+    }
+  ]
+}
