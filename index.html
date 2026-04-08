@@ -761,20 +761,20 @@
             : 9999;
           const canUse = limitInfo.effectiveAvailable >= amount;
 
-const isOverdue = card.daysUntilDue < 0;
-const isDueToday = card.daysUntilDue === 0;
-const isDueVerySoon = card.daysUntilDue > 0 && card.daysUntilDue <= 3;
-const isDueSoon = card.daysUntilDue > 3 && card.daysUntilDue <= 7;
+          const isOverdue = card.daysUntilDue < 0;
+          const isDueToday = card.daysUntilDue === 0;
+          const isDueVerySoon = card.daysUntilDue > 0 && card.daysUntilDue <= 3;
+          const isDueSoon = card.daysUntilDue > 3 && card.daysUntilDue <= 7;
 
           let score = 0;
           if (canUse) score += 1000;
           score -= afterUtilization;
           score += limitInfo.effectiveAvailable / 1000;
 
-if (isOverdue) score -= 1000;
-else if (isDueToday) score -= 500;
-else if (isDueVerySoon) score -= 220;
-else if (isDueSoon) score -= 90;
+          if (isOverdue) score -= 1000;
+          else if (isDueToday) score -= 500;
+          else if (isDueVerySoon) score -= 220;
+          else if (isDueSoon) score -= 90;
 
           return {
             ...card,
@@ -789,10 +789,8 @@ else if (isDueSoon) score -= 90;
             score
           };
         })
-
-.filter(card => card.canUse && card.daysUntilDue >= 0)
-.sort((a, b) => b.score - a.score);
-
+        .filter(card => card.canUse && card.daysUntilDue >= 0)
+        .sort((a, b) => b.score - a.score);
     }
 
     function rankCardsForPayment(cards) {
@@ -944,37 +942,74 @@ else if (isDueSoon) score -= 90;
       const utilization = Number(card.utilization || 0);
       const daysUntilDue = Number(card.daysUntilDue || 999);
 
-      if (daysUntilDue <= 0) {
+      if (usedAmount <= 0) {
         return {
+          level: "none",
+          title: "ยังไม่มีคำแนะนำการชำระ",
+          note: "ขณะนี้ยังไม่มียอดการใช้งาน"
+        };
+      }
+
+      if (daysUntilDue < 0) {
+        return {
+          level: "critical",
           title: "ควรรีบชำระทันที",
-          note: "หากยังไม่พร้อมจ่ายเต็ม อย่างน้อยควรตรวจสอบยอดขั้นต่ำจริงจากแอปธนาคารและชำระโดยเร็ว"
+          note: "บัตรนี้เลยกำหนดแล้ว ควรตรวจสอบยอดขั้นต่ำจริงหรือยอดค้างชำระในแอปธนาคารและชำระโดยเร็วที่สุด"
+        };
+      }
+
+      if (daysUntilDue === 0) {
+        return {
+          level: "critical",
+          title: "ควรชำระภายในวันนี้",
+          note: "บัตรนี้ครบกำหนดวันนี้ อย่างน้อยควรชำระขั้นต่ำก่อน เพื่อไม่ให้เลยกำหนด"
+        };
+      }
+
+      if (daysUntilDue <= 3 && utilization >= 80) {
+        return {
+          level: "high",
+          title: "ควรจ่ายมากกว่าขั้นต่ำ หรือจ่ายเต็มถ้าทำได้",
+          note: "ใกล้ครบกำหนดมากและใช้วงเงินสูง การจ่ายมากกว่าขั้นต่ำจะช่วยลดภาระและคืนวงเงินได้มากกว่า"
         };
       }
 
       if (daysUntilDue <= 3) {
         return {
+          level: "high",
           title: "อย่างน้อยควรจ่ายขั้นต่ำก่อน",
-          note: "ถ้ายังไม่พร้อมจ่ายเต็ม อย่างน้อยควรตรวจสอบยอดขั้นต่ำจริงจากแอปธนาคารและชำระก่อนถึงกำหนด"
+          note: "บัตรนี้ใกล้ครบกำหนดมาก ถ้ายังไม่พร้อมจ่ายเต็ม อย่างน้อยควรชำระขั้นต่ำก่อน"
         };
       }
 
-      if (utilization >= 80 || usedAmount >= 100000) {
+      if (utilization >= 90) {
         return {
-          title: "แนะนำให้จ่ายมากกว่าขั้นต่ำ หรือจ่ายเต็มถ้าทำได้",
-          note: "กรณีใช้วงเงินสูง การจ่ายมากกว่าขั้นต่ำจะช่วยลดภาระและคืนวงเงินได้มากกว่า"
+          level: "high",
+          title: "ควรรีบลดการใช้วงเงิน",
+          note: "การใช้วงเงินสูงมาก แม้ยังไม่ใกล้ครบกำหนด ก็ควรจ่ายก้อนหนึ่งเพื่อลดภาระและเพิ่มวงเงินคงเหลือ"
         };
       }
 
-      if (usedAmount > 0) {
+      if (utilization >= 70) {
         return {
-          title: "แนะนำให้จ่ายเต็มถ้าทำได้",
-          note: "หากยอดไม่สูงเกินไป การจ่ายเต็มจะช่วยปิดยอดรอบนี้ได้ง่ายกว่า"
+          level: "medium",
+          title: "แนะนำให้จ่ายมากกว่าขั้นต่ำ",
+          note: "การใช้วงเงินค่อนข้างสูง การจ่ายมากกว่าขั้นต่ำจะช่วยให้สัดส่วนวงเงินดีขึ้น"
+        };
+      }
+
+      if (usedAmount <= 10000) {
+        return {
+          level: "low",
+          title: "แนะนำให้จ่ายเต็มได้ไม่ยาก",
+          note: "ยอดค่อนข้างไม่สูง ถ้าสะดวกสามารถจ่ายเต็มเพื่อปิดรอบนี้ได้"
         };
       }
 
       return {
-        title: "ยังไม่มีคำแนะนำการชำระ",
-        note: "ขณะนี้ยังไม่มียอดการใช้งาน"
+        level: "normal",
+        title: "แนะนำให้จ่ายเต็มถ้าทำได้",
+        note: "หากไม่กระทบสภาพคล่อง การจ่ายเต็มจะช่วยปิดยอดรอบนี้ได้ง่ายกว่า"
       };
     }
 
@@ -1015,35 +1050,64 @@ else if (isDueSoon) score -= 90;
       `;
     }
 
+    function estimateMinimumPayment(card) {
+      const usedAmount = Math.max(0, Number(card.usedAmount || 0));
+      if (usedAmount <= 0) return 0;
+
+      const rateBased = usedAmount * 0.08;
+      const floorAmount = 500;
+      return Math.min(usedAmount, Math.max(floorAmount, rateBased));
+    }
+
     function allocateBudgetToCards(cards, budgetAmount) {
       const ranked = rankCardsForPayment(cards);
-      const remainingBudgetStart = Math.max(0, Number(budgetAmount || 0));
+      const initialBudget = Math.max(0, Number(budgetAmount || 0));
+      let remainingBudget = initialBudget;
 
-      let remainingBudget = remainingBudgetStart;
-      const plans = [];
+      const plans = ranked
+        .filter(card => Number(card.usedAmount || 0) > 0)
+        .map(card => ({
+          ...card,
+          estimatedMinPay: estimateMinimumPayment(card),
+          payAmount: 0
+        }));
 
-      for (const card of ranked) {
+      for (const plan of plans) {
+        const isUrgent = plan.daysUntilDue <= 3 || plan.daysUntilDue < 0 || plan.utilization >= 80;
+        if (!isUrgent || remainingBudget <= 0) continue;
+
+        const minPay = Math.min(
+          plan.estimatedMinPay,
+          remainingBudget,
+          plan.usedAmount - plan.payAmount
+        );
+
+        plan.payAmount += minPay;
+        remainingBudget -= minPay;
+      }
+
+      for (const plan of plans) {
         if (remainingBudget <= 0) break;
 
-        const usedAmount = Math.max(0, Number(card.usedAmount || 0));
-        if (usedAmount <= 0) continue;
+        const remainingCardBalance = plan.usedAmount - plan.payAmount;
+        if (remainingCardBalance <= 0) continue;
 
-        const payAmount = Math.min(usedAmount, remainingBudget);
-        const remainingCardBalance = usedAmount - payAmount;
-
-        plans.push({
-          ...card,
-          payAmount,
-          remainingCardBalance
-        });
-
-        remainingBudget -= payAmount;
+        const extraPay = Math.min(remainingCardBalance, remainingBudget);
+        plan.payAmount += extraPay;
+        remainingBudget -= extraPay;
       }
+
+      const finalPlans = plans
+        .filter(plan => plan.payAmount > 0)
+        .map(plan => ({
+          ...plan,
+          remainingCardBalance: Math.max(0, plan.usedAmount - plan.payAmount)
+        }));
 
       return {
         ranked,
-        plans,
-        initialBudget: remainingBudgetStart,
+        plans: finalPlans,
+        initialBudget,
         remainingBudget
       };
     }
@@ -1084,6 +1148,9 @@ else if (isDueSoon) score -= 90;
             <div class="payment-plan-item">
               <strong>ลำดับ ${index + 1}: ${plan.name}</strong><br>
               ควรชำระ: <strong>${formatBaht(plan.payAmount)}</strong> บาท<br>
+              ${plan.payAmount <= plan.estimatedMinPay
+                ? `ลักษณะการจ่าย: ขั้นต่ำที่ประเมิน<br>`
+                : `ลักษณะการจ่าย: ขั้นต่ำที่ประเมิน + โปะเพิ่ม<br>`}
               ยอดเดิม: ${formatBaht(plan.usedAmount)} บาท<br>
               ยอดคงเหลือหลังชำระ: ${formatBaht(plan.remainingCardBalance)} บาท<br>
               วันครบกำหนดชำระ: ${plan.dueDateText} (${formatDueStatus(plan.daysUntilDue)})
@@ -1100,7 +1167,8 @@ else if (isDueSoon) score -= 90;
 
         <div class="advice-note">
           คำแนะนำนี้ใช้หลักการเรียงลำดับจากบัตรที่ควรชำระก่อนตามยอดใช้งาน การใช้วงเงิน และความใกล้วันครบกำหนดชำระ
-          โดยยังไม่ได้อ้างอิงยอดขั้นต่ำจริงหรือเงื่อนไขดอกเบี้ยเฉพาะของแต่ละธนาคาร
+          โดยยังไม่ได้อ้างอิงยอดขั้นต่ำจริงหรือเงื่อนไขดอกเบี้ยเฉพาะของแต่ละธนาคาร<br>
+          หมายเหตุ: ยอดขั้นต่ำในระบบนี้เป็นการประมาณเบื้องต้น ไม่ใช่ยอดขั้นต่ำจริงจากธนาคาร
         </div>
       `;
     }
@@ -1158,7 +1226,7 @@ else if (isDueSoon) score -= 90;
           ? (limitInfo.effectiveUsed / limitInfo.effectiveLimit) * 100
           : 0;
         const status = getCardStatus(card);
-	const dueStatusDisplay = usedAmount <= 0 ? "-" : card.dueStatusText;
+        const dueStatusDisplay = usedAmount <= 0 ? "-" : card.dueStatusText;
 
         return `
           <div class="card-item">
