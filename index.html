@@ -524,28 +524,57 @@
       return d;
     }
 
-    function getBillingCycleDates(statementDay, daysFromStatementToDue) {
+    function diffInDays(fromDate, toDate) {
+      const fromOnly = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+      const toOnly = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+      return Math.round((toOnly - fromOnly) / (1000 * 60 * 60 * 24));
+    }
+
+    function getCycleInfo(statementDay, daysFromStatementToDue) {
       const today = new Date();
-      const currentYear = today.getFullYear();
-      const currentMonth = today.getMonth();
+      const y = today.getFullYear();
+      const m = today.getMonth();
 
-      const statementDateCurrentMonth = createSafeDate(currentYear, currentMonth, statementDay);
+      const prevMonth = new Date(y, m - 1, 1);
+      const nextMonth = new Date(y, m + 1, 1);
 
-      let statementDate;
-      if (today >= statementDateCurrentMonth) {
-        statementDate = statementDateCurrentMonth;
-      } else {
-        const prevMonthDate = new Date(currentYear, currentMonth - 1, 1);
-        statementDate = createSafeDate(
-          prevMonthDate.getFullYear(),
-          prevMonthDate.getMonth(),
-          statementDay
-        );
+      const statementPrev = createSafeDate(prevMonth.getFullYear(), prevMonth.getMonth(), statementDay);
+      const statementCurrent = createSafeDate(y, m, statementDay);
+      const statementNext = createSafeDate(nextMonth.getFullYear(), nextMonth.getMonth(), statementDay);
+
+      let latestStatement = statementPrev;
+      if (statementCurrent <= today) {
+        latestStatement = statementCurrent;
       }
 
-      const dueDate = addDays(statementDate, Number(daysFromStatementToDue || 0));
+      const latestDue = addDays(latestStatement, Number(daysFromStatementToDue || 0));
 
-      return { statementDate, dueDate };
+      let nextStatementForNewSpend = statementCurrent;
+      if (statementCurrent < today) {
+        nextStatementForNewSpend = statementNext;
+      }
+
+      const nextDueForNewSpend = addDays(nextStatementForNewSpend, Number(daysFromStatementToDue || 0));
+
+      const isOverdue = latestDue < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const overdueDays = isOverdue ? Math.abs(diffInDays(latestDue, today)) : 0;
+      const daysUntilLatestDue = isOverdue ? -overdueDays : diffInDays(today, latestDue);
+      const daysUntilNextDueForNewSpend = diffInDays(today, nextDueForNewSpend);
+
+      return {
+        latestStatement,
+        latestDue,
+        nextStatementForNewSpend,
+        nextDueForNewSpend,
+        isOverdue,
+        overdueDays,
+        daysUntilLatestDue,
+        daysUntilNextDueForNewSpend,
+        latestStatementText: formatThaiDate(latestStatement),
+        latestDueText: formatThaiDate(latestDue),
+        nextStatementForNewSpendText: formatThaiDate(nextStatementForNewSpend),
+        nextDueForNewSpendText: formatThaiDate(nextDueForNewSpend)
+      };
     }
 
     function loadUsageMap() {
@@ -606,14 +635,6 @@
 
     function closeResetDialog() {
       document.getElementById("resetDialog").close();
-    }
-
-    function getDaysUntilDate(targetDate) {
-      const today = new Date();
-      const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      const targetOnly = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
-      const diffMs = targetOnly - todayOnly;
-      return Math.round(diffMs / (1000 * 60 * 60 * 24));
     }
 
     function getSharedGroupMap(cards) {
@@ -677,7 +698,6 @@
 
     function getCardStatus(card) {
       const usedAmount = Number(card.usedAmount || 0);
-      const dueInDays = Number(card.daysUntilDue ?? 999);
 
       if (usedAmount <= 0) {
         return {
@@ -686,7 +706,14 @@
         };
       }
 
-      if (dueInDays <= 7) {
+      if (card.isOverdue) {
+        return {
+          text: `เลยกำหนดชำระ ${card.overdueDays} วัน`,
+          className: "status-high"
+        };
+      }
+
+      if (card.daysUntilLatestDue <= 7) {
         return {
           text: "ควรรีบชำระ",
           className: "status-high"
@@ -699,11 +726,14 @@
       };
     }
 
-    function getUrgencyBadge(daysUntilDue, utilization) {
-      if (daysUntilDue <= 3) {
+    function getUrgencyBadge(card) {
+      if (card.isOverdue) {
+        return { text: "เลยกำหนดชำระ", className: "urgency-badge urgency-high" };
+      }
+      if (card.daysUntilLatestDue <= 3) {
         return { text: "เร่งชำระ", className: "urgency-badge urgency-high" };
       }
-      if (daysUntilDue <= 7 || utilization >= 80) {
+      if (card.daysUntilLatestDue <= 7 || card.utilization >= 80) {
         return { text: "ควรวางแผนชำระ", className: "urgency-badge urgency-warn" };
       }
       return { text: "ยังไม่เร่งด่วน", className: "urgency-badge urgency-good" };
@@ -728,11 +758,14 @@
 
           let score = 0;
           if (canUse) score += 1000;
+
           score -= afterUtilization;
           score += limitInfo.effectiveAvailable / 1000;
 
-          if (card.daysUntilDue <= 7) score -= 80;
-          else if (card.daysUntilDue <= 14) score -= 30;
+          score += card.daysUntilNextDueForNewSpend * 0.5;
+
+          if (card.isOverdue) score -= 120;
+          else if (card.daysUntilLatestDue <= 7) score -= 40;
 
           return {
             ...card,
@@ -757,10 +790,15 @@
           const limit = Number(card.limit || 0);
           const used = Number(card.usedAmount || 0);
           const utilization = limit > 0 ? (used / limit) * 100 : 0;
-          const daysUntilDue = Number(card.daysUntilDue ?? 999);
 
           let score = 0;
-          score += Math.max(0, 40 - daysUntilDue) * 20;
+
+          if (card.isOverdue) {
+            score += 3000 + (card.overdueDays * 100);
+          } else {
+            score += Math.max(0, 40 - card.daysUntilLatestDue) * 20;
+          }
+
           score += used / 100;
           score += utilization * 2;
 
@@ -794,10 +832,10 @@
         reasons.push(`หลังใช้แล้วการใช้วงเงินจะค่อนข้างสูง (${card.afterUtilization.toFixed(1)}%)`);
       }
 
-      if (card.daysUntilDue <= 7) {
-        reasons.push(`อย่างไรก็ตาม บัตรนี้ใกล้ครบกำหนดชำระ เหลือประมาณ ${card.daysUntilDue} วัน`);
-      } else {
-        reasons.push(`ยังไม่ใกล้วันครบกำหนดชำระมากนัก เหลือประมาณ ${card.daysUntilDue} วัน`);
+      reasons.push(`หากใช้วันนี้ รายการใหม่จะไปอยู่ในรอบที่ครบกำหนดประมาณอีก ${card.daysUntilNextDueForNewSpend} วัน`);
+
+      if (card.isOverdue) {
+        reasons.push(`อย่างไรก็ตาม บัตรนี้มียอดรอบล่าสุดเลยกำหนดแล้ว ${card.overdueDays} วัน`);
       }
 
       return reasons;
@@ -836,6 +874,7 @@
         <div>ยอดการใช้งานปัจจุบันของบัตรนี้: <strong>${formatBaht(best.usedAmount)}</strong> บาท</div>
         <div>ยอดการใช้งานของบัตรนี้หลังใช้: <strong>${formatBaht(best.afterOwnUsed)}</strong> บาท</div>
         <div>การใช้วงเงินหลังรูด: <strong>${best.afterUtilization.toFixed(1)}%</strong></div>
+        <div>วันครบกำหนดของรอบใหม่: <strong>${best.nextDueForNewSpendText}</strong></div>
         <ul class="reason-list">
           ${reasons.map(reason => `<li>${reason}</li>`).join("")}
         </ul>
@@ -849,7 +888,7 @@
                     <strong>ตัวเลือกสำรองอันดับ ${index + 2}: ${card.name}</strong><br>
                     วงเงินคงเหลือสำหรับรูด: ${formatBaht(card.available)} บาท<br>
                     การใช้วงเงินหลังรูด: ${card.afterUtilization.toFixed(1)}%<br>
-                    เหลืออีก ${card.daysUntilDue} วันถึงกำหนดชำระ
+                    รอบใหม่จะครบกำหนดอีก ${card.daysUntilNextDueForNewSpend} วัน
                   </div>
                 `).join("")}
               </div>
@@ -863,7 +902,6 @@
       const reasons = [];
       const usedAmount = Number(card.usedAmount || 0);
       const utilization = Number(card.utilization || 0);
-      const daysUntilDue = Number(card.daysUntilDue || 999);
 
       if (usedAmount > 100000) {
         reasons.push(`ยอดการใช้งานค่อนข้างสูง (${formatBaht(usedAmount)} บาท)`);
@@ -879,12 +917,14 @@
         reasons.push(`การใช้วงเงินอยู่ที่ ${utilization.toFixed(1)}%`);
       }
 
-      if (daysUntilDue <= 3) {
-        reasons.push(`ใกล้วันครบกำหนดชำระมาก เหลือประมาณ ${daysUntilDue} วัน`);
-      } else if (daysUntilDue <= 7) {
-        reasons.push(`ใกล้วันครบกำหนดชำระ เหลือประมาณ ${daysUntilDue} วัน`);
+      if (card.isOverdue) {
+        reasons.push(`เลยกำหนดชำระแล้วประมาณ ${card.overdueDays} วัน`);
+      } else if (card.daysUntilLatestDue <= 3) {
+        reasons.push(`ใกล้วันครบกำหนดชำระมาก เหลือประมาณ ${card.daysUntilLatestDue} วัน`);
+      } else if (card.daysUntilLatestDue <= 7) {
+        reasons.push(`ใกล้วันครบกำหนดชำระ เหลือประมาณ ${card.daysUntilLatestDue} วัน`);
       } else {
-        reasons.push(`ยังเหลือเวลาถึงกำหนดชำระประมาณ ${daysUntilDue} วัน`);
+        reasons.push(`ยังเหลือเวลาถึงกำหนดชำระประมาณ ${card.daysUntilLatestDue} วัน`);
       }
 
       return reasons;
@@ -893,9 +933,15 @@
     function getPaymentActionAdvice(card) {
       const usedAmount = Number(card.usedAmount || 0);
       const utilization = Number(card.utilization || 0);
-      const daysUntilDue = Number(card.daysUntilDue || 999);
 
-      if (daysUntilDue <= 3) {
+      if (card.isOverdue) {
+        return {
+          title: "ควรชำระทันที",
+          note: "บัตรนี้เลยกำหนดชำระแล้ว ควรตรวจสอบยอดขั้นต่ำและยอดค้างจริงจากแอปธนาคารโดยเร็ว"
+        };
+      }
+
+      if (card.daysUntilLatestDue <= 3) {
         return {
           title: "อย่างน้อยควรจ่ายขั้นต่ำก่อน",
           note: "ถ้ายังไม่พร้อมจ่ายเต็ม อย่างน้อยควรตรวจสอบยอดขั้นต่ำจริงจากแอปธนาคารและชำระก่อนถึงกำหนด"
@@ -936,15 +982,19 @@
       const best = ranked[0];
       const reasons = buildPaymentReasons(best);
       const advice = getPaymentActionAdvice(best);
-      const urgency = getUrgencyBadge(best.daysUntilDue, best.utilization);
+      const urgency = getUrgencyBadge(best);
 
       resultEl.innerHTML = `
         <div class="${urgency.className}">${urgency.text}</div>
         <div class="recommend-title">ควรพิจารณาชำระก่อน: ${best.name}</div>
         <div>ยอดการใช้งานปัจจุบัน: <strong>${formatBaht(best.usedAmount)}</strong> บาท</div>
         <div>การใช้วงเงิน: <strong>${best.utilization.toFixed(1)}%</strong></div>
-        <div>วันครบกำหนดชำระ: <strong>${best.dueDateText}</strong></div>
-        <div>เหลืออีก <strong>${best.daysUntilDue}</strong> วันถึงกำหนดชำระ</div>
+        <div>วันครบกำหนดรอบล่าสุด: <strong>${best.latestDueText}</strong></div>
+        <div>${
+          best.isOverdue
+            ? `เลยกำหนดมาแล้ว <strong>${best.overdueDays}</strong> วัน`
+            : `เหลืออีก <strong>${best.daysUntilLatestDue}</strong> วันถึงกำหนดชำระ`
+        }</div>
 
         <div class="advice-main">คำแนะนำหลัก: ${advice.title}</div>
 
@@ -1030,7 +1080,11 @@
               ควรชำระ: <strong>${formatBaht(plan.payAmount)}</strong> บาท<br>
               ยอดการใช้งานเดิม: ${formatBaht(plan.usedAmount)} บาท<br>
               ยอดคงเหลือหลังชำระ: ${formatBaht(plan.remainingCardBalance)} บาท<br>
-              วันครบกำหนดชำระ: ${plan.dueDateText} (เหลือ ${plan.daysUntilDue} วัน)
+              ${
+                plan.isOverdue
+                  ? `รอบล่าสุดครบกำหนด ${plan.latestDueText} และเลยกำหนด ${plan.overdueDays} วัน`
+                  : `รอบล่าสุดครบกำหนด ${plan.latestDueText} (เหลือ ${plan.daysUntilLatestDue} วัน)`
+              }
             </div>
           `).join("")}
         </div>
@@ -1073,13 +1127,21 @@
 
     function enrichCards(cards) {
       return cards.map(card => {
-        const cycle = getBillingCycleDates(card.statementDay, card.daysFromStatementToDue);
+        const cycle = getCycleInfo(card.statementDay, card.daysFromStatementToDue);
         return {
           ...card,
-          statementDateText: formatThaiDate(cycle.statementDate),
-          dueDateText: formatThaiDate(cycle.dueDate),
-          dueDay: cycle.dueDate.getDate(),
-          daysUntilDue: getDaysUntilDate(cycle.dueDate)
+          latestStatement: cycle.latestStatement,
+          latestDue: cycle.latestDue,
+          nextStatementForNewSpend: cycle.nextStatementForNewSpend,
+          nextDueForNewSpend: cycle.nextDueForNewSpend,
+          latestStatementText: cycle.latestStatementText,
+          latestDueText: cycle.latestDueText,
+          nextStatementForNewSpendText: cycle.nextStatementForNewSpendText,
+          nextDueForNewSpendText: cycle.nextDueForNewSpendText,
+          isOverdue: cycle.isOverdue,
+          overdueDays: cycle.overdueDays,
+          daysUntilLatestDue: cycle.daysUntilLatestDue,
+          daysUntilNextDueForNewSpend: cycle.daysUntilNextDueForNewSpend
         };
       });
     }
@@ -1107,13 +1169,20 @@
             <h3>${card.name}</h3>
             <p>วงเงิน: <span class="card-row-strong">${formatBaht(ownLimit)}</span> บาท</p>
             <p>ยอดการใช้งานของบัตรนี้: <span class="card-row-strong">${formatBaht(usedAmount)}</span> บาท</p>
-            <p>วงเงินที่ใช้คำนวณการรูด: <span class="card-row-strong">${formatBaht(limitInfo.effectiveLimit)}</span> บาท</p>
             <p>วงเงินคงเหลือสำหรับรูด: <span class="card-row-strong">${formatBaht(available)}</span> บาท</p>
             <p>การใช้วงเงินสำหรับการรูด: <span class="card-row-strong">${usagePercent.toFixed(1)}%</span></p>
-            <p>วันสรุปยอด: ${card.statementDateText}</p>
-            <p>วันครบกำหนดชำระ: ${card.dueDateText}</p>
-            <p>เหลืออีก <span class="days-left">${card.daysUntilDue}</span> วันถึงกำหนดชำระ</p>
-            <p>ช่วงวันจากสรุปยอดถึงกำหนดชำระ: ${card.daysFromStatementToDue || "-"} วัน</p>
+            <p>วันสรุปยอดถัดไปสำหรับการใช้ใหม่: ${card.nextStatementForNewSpendText}</p>
+            <p>วันครบกำหนดของรอบใหม่: ${card.nextDueForNewSpendText}</p>
+            <p>รอบใหม่จะครบกำหนดอีก <span class="days-left">${card.daysUntilNextDueForNewSpend}</span> วัน</p>
+            ${
+              usedAmount > 0
+                ? `<p>${
+                    card.isOverdue
+                      ? `รอบล่าสุดครบกำหนด ${card.latestDueText} และเลยกำหนด <span class="days-left">${card.overdueDays}</span> วัน`
+                      : `รอบล่าสุดครบกำหนด ${card.latestDueText} เหลืออีก <span class="days-left">${card.daysUntilLatestDue}</span> วัน`
+                  }</p>`
+                : ""
+            }
             <p>สถานะ: <span class="${status.className}">${status.text}</span></p>
             ${card.sharedLimitGroup ? `<p class="shared-note">${card.sharedLimitLabel || "บัตรนี้ใช้วงเงินร่วม"}</p>` : ""}
 
