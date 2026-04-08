@@ -616,6 +616,14 @@
       return Math.round(diffMs / (1000 * 60 * 60 * 24));
     }
 
+    function formatDueStatus(daysUntilDue) {
+      const days = Number(daysUntilDue || 0);
+
+      if (days > 0) return `เหลืออีก ${days} วัน`;
+      if (days === 0) return `ครบกำหนดวันนี้`;
+      return `เลยกำหนดมาแล้ว ${Math.abs(days)} วัน`;
+    }
+
     function getSharedGroupMap(cards) {
       const groups = {};
 
@@ -681,25 +689,52 @@
 
       if (usedAmount <= 0) {
         return {
-          text: "ไม่มียอดการใช้งาน",
+          text: "ยังไม่มียอด",
           className: "status-good"
+        };
+      }
+
+      if (dueInDays < 0) {
+        return {
+          text: "เลยกำหนดแล้ว",
+          className: "status-high"
+        };
+      }
+
+      if (dueInDays === 0) {
+        return {
+          text: "ครบกำหนดวันนี้",
+          className: "status-high"
+        };
+      }
+
+      if (dueInDays <= 3) {
+        return {
+          text: "ใกล้ครบกำหนดมาก",
+          className: "status-high"
         };
       }
 
       if (dueInDays <= 7) {
         return {
-          text: "ควรรีบชำระ",
-          className: "status-high"
+          text: "ใกล้ครบกำหนด",
+          className: "status-warn"
         };
       }
 
       return {
         text: "ควรวางแผนชำระ",
-        className: "status-warn"
+        className: "status-good"
       };
     }
 
     function getUrgencyBadge(daysUntilDue, utilization) {
+      if (daysUntilDue < 0) {
+        return { text: "เลยกำหนดแล้ว", className: "urgency-badge urgency-high" };
+      }
+      if (daysUntilDue === 0) {
+        return { text: "ครบกำหนดวันนี้", className: "urgency-badge urgency-high" };
+      }
       if (daysUntilDue <= 3) {
         return { text: "เร่งชำระ", className: "urgency-badge urgency-high" };
       }
@@ -731,8 +766,9 @@
           score -= afterUtilization;
           score += limitInfo.effectiveAvailable / 1000;
 
-          if (card.daysUntilDue <= 7) score -= 80;
-          else if (card.daysUntilDue <= 14) score -= 30;
+          if (card.daysUntilDue < 0) score -= 120;
+          else if (card.daysUntilDue <= 3) score -= 70;
+          else if (card.daysUntilDue <= 7) score -= 35;
 
           return {
             ...card,
@@ -764,6 +800,11 @@
           score += used / 100;
           score += utilization * 2;
 
+          if (daysUntilDue < 0) score += 250;
+          else if (daysUntilDue === 0) score += 180;
+          else if (daysUntilDue <= 3) score += 120;
+          else if (daysUntilDue <= 7) score += 60;
+
           return {
             ...card,
             utilization,
@@ -778,27 +819,23 @@
       const reasons = [];
 
       if (card.isShared) {
-        reasons.push(`บัตรนี้ใช้วงเงินร่วม และขณะนี้ยังเหลือวงเงินร่วม ${formatBaht(card.available)} บาท`);
+        reasons.push(`บัตรนี้ใช้วงเงินร่วม และยังเหลือวงเงินร่วม ${formatBaht(card.available)} บาท`);
       } else {
-        reasons.push(`วงเงินคงเหลือของบัตรนี้เพียงพอสำหรับยอด ${formatBaht(plannedAmount)} บาท`);
+        reasons.push(`วงเงินคงเหลือเพียงพอสำหรับยอด ${formatBaht(plannedAmount)} บาท`);
       }
 
       const remainingAfterUse = card.available - plannedAmount;
-      reasons.push(`หลังใช้แล้วจะเหลือวงเงินสำหรับรูดต่อประมาณ ${formatBaht(remainingAfterUse)} บาท`);
+      reasons.push(`หลังใช้แล้วจะเหลือวงเงินประมาณ ${formatBaht(remainingAfterUse)} บาท`);
 
       if (card.afterUtilization < 30) {
-        reasons.push(`หลังใช้แล้วยังใช้วงเงินในระดับค่อนข้างต่ำ (${card.afterUtilization.toFixed(1)}%)`);
+        reasons.push(`หลังใช้แล้วการใช้วงเงินยังต่ำ (${card.afterUtilization.toFixed(1)}%)`);
       } else if (card.afterUtilization < 80) {
-        reasons.push(`หลังใช้แล้วยังอยู่ในระดับที่รับได้ (${card.afterUtilization.toFixed(1)}%)`);
+        reasons.push(`หลังใช้แล้วการใช้วงเงินยังอยู่ในระดับที่รับได้ (${card.afterUtilization.toFixed(1)}%)`);
       } else {
         reasons.push(`หลังใช้แล้วการใช้วงเงินจะค่อนข้างสูง (${card.afterUtilization.toFixed(1)}%)`);
       }
 
-      if (card.daysUntilDue <= 7) {
-        reasons.push(`อย่างไรก็ตาม บัตรนี้ใกล้ครบกำหนดชำระ เหลือประมาณ ${card.daysUntilDue} วัน`);
-      } else {
-        reasons.push(`ยังไม่ใกล้วันครบกำหนดชำระมากนัก เหลือประมาณ ${card.daysUntilDue} วัน`);
-      }
+      reasons.push(`สถานะกำหนดชำระ: ${formatDueStatus(card.daysUntilDue)}`);
 
       return reasons;
     }
@@ -833,8 +870,8 @@
       resultEl.innerHTML = `
         <div class="recommend-title">แนะนำอันดับ 1: ${best.name}</div>
         <div class="recommend-sub">ยอดที่ต้องการใช้ ${formatBaht(plannedAmount)} บาท</div>
-        <div>ยอดการใช้งานปัจจุบันของบัตรนี้: <strong>${formatBaht(best.usedAmount)}</strong> บาท</div>
-        <div>ยอดการใช้งานของบัตรนี้หลังใช้: <strong>${formatBaht(best.afterOwnUsed)}</strong> บาท</div>
+        <div>ยอดปัจจุบันของบัตรนี้: <strong>${formatBaht(best.usedAmount)}</strong> บาท</div>
+        <div>ยอดหลังใช้: <strong>${formatBaht(best.afterOwnUsed)}</strong> บาท</div>
         <div>การใช้วงเงินหลังรูด: <strong>${best.afterUtilization.toFixed(1)}%</strong></div>
         <ul class="reason-list">
           ${reasons.map(reason => `<li>${reason}</li>`).join("")}
@@ -847,9 +884,9 @@
                 ${alternatives.map((card, index) => `
                   <div class="rank-item">
                     <strong>ตัวเลือกสำรองอันดับ ${index + 2}: ${card.name}</strong><br>
-                    วงเงินคงเหลือสำหรับรูด: ${formatBaht(card.available)} บาท<br>
+                    วงเงินคงเหลือ: ${formatBaht(card.available)} บาท<br>
                     การใช้วงเงินหลังรูด: ${card.afterUtilization.toFixed(1)}%<br>
-                    เหลืออีก ${card.daysUntilDue} วันถึงกำหนดชำระ
+                    สถานะกำหนดชำระ: ${formatDueStatus(card.daysUntilDue)}
                   </div>
                 `).join("")}
               </div>
@@ -866,9 +903,9 @@
       const daysUntilDue = Number(card.daysUntilDue || 999);
 
       if (usedAmount > 100000) {
-        reasons.push(`ยอดการใช้งานค่อนข้างสูง (${formatBaht(usedAmount)} บาท)`);
+        reasons.push(`ยอดใช้งานค่อนข้างสูง (${formatBaht(usedAmount)} บาท)`);
       } else if (usedAmount > 0) {
-        reasons.push(`มียอดการใช้งาน (${formatBaht(usedAmount)} บาท)`);
+        reasons.push(`มียอดใช้งาน ${formatBaht(usedAmount)} บาท`);
       }
 
       if (utilization >= 80) {
@@ -879,12 +916,16 @@
         reasons.push(`การใช้วงเงินอยู่ที่ ${utilization.toFixed(1)}%`);
       }
 
-      if (daysUntilDue <= 3) {
-        reasons.push(`ใกล้วันครบกำหนดชำระมาก เหลือประมาณ ${daysUntilDue} วัน`);
+      if (daysUntilDue < 0) {
+        reasons.push(`เลยกำหนดมาแล้ว ${Math.abs(daysUntilDue)} วัน`);
+      } else if (daysUntilDue === 0) {
+        reasons.push(`ครบกำหนดชำระวันนี้`);
+      } else if (daysUntilDue <= 3) {
+        reasons.push(`ใกล้วันครบกำหนดมาก เหลืออีก ${daysUntilDue} วัน`);
       } else if (daysUntilDue <= 7) {
-        reasons.push(`ใกล้วันครบกำหนดชำระ เหลือประมาณ ${daysUntilDue} วัน`);
+        reasons.push(`ใกล้วันครบกำหนด เหลืออีก ${daysUntilDue} วัน`);
       } else {
-        reasons.push(`ยังเหลือเวลาถึงกำหนดชำระประมาณ ${daysUntilDue} วัน`);
+        reasons.push(`ยังเหลือเวลาอีก ${daysUntilDue} วัน`);
       }
 
       return reasons;
@@ -894,6 +935,13 @@
       const usedAmount = Number(card.usedAmount || 0);
       const utilization = Number(card.utilization || 0);
       const daysUntilDue = Number(card.daysUntilDue || 999);
+
+      if (daysUntilDue <= 0) {
+        return {
+          title: "ควรรีบชำระทันที",
+          note: "หากยังไม่พร้อมจ่ายเต็ม อย่างน้อยควรตรวจสอบยอดขั้นต่ำจริงจากแอปธนาคารและชำระโดยเร็ว"
+        };
+      }
 
       if (daysUntilDue <= 3) {
         return {
@@ -941,10 +989,10 @@
       resultEl.innerHTML = `
         <div class="${urgency.className}">${urgency.text}</div>
         <div class="recommend-title">ควรพิจารณาชำระก่อน: ${best.name}</div>
-        <div>ยอดการใช้งานปัจจุบัน: <strong>${formatBaht(best.usedAmount)}</strong> บาท</div>
+        <div>ยอดใช้งานปัจจุบัน: <strong>${formatBaht(best.usedAmount)}</strong> บาท</div>
         <div>การใช้วงเงิน: <strong>${best.utilization.toFixed(1)}%</strong></div>
         <div>วันครบกำหนดชำระ: <strong>${best.dueDateText}</strong></div>
-        <div>เหลืออีก <strong>${best.daysUntilDue}</strong> วันถึงกำหนดชำระ</div>
+        <div><strong>${formatDueStatus(best.daysUntilDue)}</strong></div>
 
         <div class="advice-main">คำแนะนำหลัก: ${advice.title}</div>
 
@@ -1028,9 +1076,9 @@
             <div class="payment-plan-item">
               <strong>ลำดับ ${index + 1}: ${plan.name}</strong><br>
               ควรชำระ: <strong>${formatBaht(plan.payAmount)}</strong> บาท<br>
-              ยอดการใช้งานเดิม: ${formatBaht(plan.usedAmount)} บาท<br>
+              ยอดเดิม: ${formatBaht(plan.usedAmount)} บาท<br>
               ยอดคงเหลือหลังชำระ: ${formatBaht(plan.remainingCardBalance)} บาท<br>
-              วันครบกำหนดชำระ: ${plan.dueDateText} (เหลือ ${plan.daysUntilDue} วัน)
+              วันครบกำหนดชำระ: ${plan.dueDateText} (${formatDueStatus(plan.daysUntilDue)})
             </div>
           `).join("")}
         </div>
@@ -1074,12 +1122,14 @@
     function enrichCards(cards) {
       return cards.map(card => {
         const cycle = getBillingCycleDates(card.statementDay, card.daysFromStatementToDue);
+        const daysUntilDue = getDaysUntilDate(cycle.dueDate);
         return {
           ...card,
           statementDateText: formatThaiDate(cycle.statementDate),
           dueDateText: formatThaiDate(cycle.dueDate),
           dueDay: cycle.dueDate.getDate(),
-          daysUntilDue: getDaysUntilDate(cycle.dueDate)
+          daysUntilDue,
+          dueStatusText: formatDueStatus(daysUntilDue)
         };
       });
     }
@@ -1106,14 +1156,14 @@
             <div class="card-badge">${card.bank || "บัตรเครดิต"}${card.last4 ? " • " + card.last4 : ""}</div>
             <h3>${card.name}</h3>
             <p>วงเงิน: <span class="card-row-strong">${formatBaht(ownLimit)}</span> บาท</p>
-            <p>ยอดการใช้งานของบัตรนี้: <span class="card-row-strong">${formatBaht(usedAmount)}</span> บาท</p>
-            <p>วงเงินคงเหลือสำหรับรูด: <span class="card-row-strong">${formatBaht(available)}</span> บาท</p>
-            <p>การใช้วงเงินสำหรับการรูด: <span class="card-row-strong">${usagePercent.toFixed(1)}%</span></p>
+            <p>ยอดใช้งานปัจจุบัน: <span class="card-row-strong">${formatBaht(usedAmount)}</span> บาท</p>
+            <p>วงเงินคงเหลือ: <span class="card-row-strong">${formatBaht(available)}</span> บาท</p>
+            <p>การใช้วงเงินปัจจุบัน: <span class="card-row-strong">${usagePercent.toFixed(1)}%</span></p>
             <p>วันสรุปยอด: ${card.statementDateText}</p>
             <p>วันครบกำหนดชำระ: ${card.dueDateText}</p>
-            <p>เหลืออีก <span class="days-left">${card.daysUntilDue}</span> วันถึงกำหนดชำระ</p>
-            <p>ช่วงวันจากสรุปยอดถึงกำหนดชำระ: ${card.daysFromStatementToDue || "-"} วัน</p>
-            <p>สถานะ: <span class="${status.className}">${status.text}</span></p>
+            <p>สถานะกำหนดชำระ: <span class="days-left">${card.dueStatusText}</span></p>
+            <p>รอบชำระ: ${card.daysFromStatementToDue || "-"} วัน</p>
+            <p>สถานะบัตร: <span class="${status.className}">${status.text}</span></p>
             ${card.sharedLimitGroup ? `<p class="shared-note">${card.sharedLimitLabel || "บัตรนี้ใช้วงเงินร่วม"}</p>` : ""}
 
             <button
