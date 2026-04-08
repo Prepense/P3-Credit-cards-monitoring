@@ -102,6 +102,14 @@
       font-size: 18px;
     }
 
+    .sub-section-title {
+      margin-top: 16px;
+      margin-bottom: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
     .decision-input-row {
       display: flex;
       gap: 10px;
@@ -155,6 +163,25 @@
       border-radius: 12px;
       padding: 10px 12px;
       background: #f9fafb;
+    }
+
+    .payment-plan-list {
+      margin-top: 10px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .payment-plan-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: #f9fafb;
+      line-height: 1.65;
+    }
+
+    .payment-plan-item strong {
+      display: inline-block;
+      margin-bottom: 4px;
     }
 
     .advice-main {
@@ -377,6 +404,23 @@
         <h3>วันนี้ควรชำระบัตรใบไหนดี</h3>
         <div id="paymentRecommendationResult" class="decision-result">
           ระบบจะแนะนำจากยอดการใช้งานปัจจุบันและวันครบกำหนดชำระ
+        </div>
+
+        <div class="sub-section-title">ตัวเลือกเสริม: ถ้าวันนี้มีเงินพร้อมชำระ</div>
+
+        <div class="decision-input-row">
+          <input
+            type="number"
+            id="paymentBudgetInput"
+            min="0"
+            step="0.01"
+            placeholder="กรอกจำนวนเงินที่พร้อมชำระวันนี้ (บาท)"
+          />
+          <button type="button" class="btn btn-primary" id="paymentBudgetBtn">วิเคราะห์การชำระ</button>
+        </div>
+
+        <div id="paymentBudgetResult" class="decision-result">
+          กรอกจำนวนเงินที่พร้อมชำระ เพื่อดูคำแนะนำการแบ่งจ่าย
         </div>
       </div>
     </div>
@@ -684,7 +728,6 @@
 
           let score = 0;
           if (canUse) score += 1000;
-
           score -= afterUtilization;
           score += limitInfo.effectiveAvailable / 1000;
 
@@ -916,6 +959,96 @@
       `;
     }
 
+    function allocateBudgetToCards(cards, budgetAmount) {
+      const ranked = rankCardsForPayment(cards);
+      const remainingBudgetStart = Math.max(0, Number(budgetAmount || 0));
+
+      let remainingBudget = remainingBudgetStart;
+      const plans = [];
+
+      for (const card of ranked) {
+        if (remainingBudget <= 0) break;
+
+        const usedAmount = Math.max(0, Number(card.usedAmount || 0));
+        if (usedAmount <= 0) continue;
+
+        const payAmount = Math.min(usedAmount, remainingBudget);
+        const remainingCardBalance = usedAmount - payAmount;
+
+        plans.push({
+          ...card,
+          payAmount,
+          remainingCardBalance
+        });
+
+        remainingBudget -= payAmount;
+      }
+
+      return {
+        ranked,
+        plans,
+        initialBudget: remainingBudgetStart,
+        remainingBudget
+      };
+    }
+
+    function renderBudgetPaymentRecommendation(cards) {
+      const resultEl = document.getElementById("paymentBudgetResult");
+      const inputEl = document.getElementById("paymentBudgetInput");
+
+      if (!resultEl || !inputEl) return;
+
+      const budgetAmount = Number(inputEl.value || 0);
+
+      if (!budgetAmount || budgetAmount <= 0) {
+        resultEl.innerHTML = `กรอกจำนวนเงินที่พร้อมชำระ เพื่อดูคำแนะนำการแบ่งจ่าย`;
+        return;
+      }
+
+      const allocation = allocateBudgetToCards(cards, budgetAmount);
+      const { plans, remainingBudget, initialBudget } = allocation;
+
+      if (!plans.length) {
+        resultEl.innerHTML = `
+          <div class="recommend-title">ยังไม่สามารถวิเคราะห์การแบ่งจ่ายได้</div>
+          <div>ขณะนี้ไม่พบบัตรที่มียอดค้างสำหรับนำเงินไปชำระ</div>
+        `;
+        return;
+      }
+
+      const firstPlan = plans[0];
+      const paidTotal = plans.reduce((sum, item) => sum + item.payAmount, 0);
+
+      resultEl.innerHTML = `
+        <div class="recommend-title">ถ้ามีเงินพร้อมชำระ ${formatBaht(initialBudget)} บาท</div>
+        <div class="recommend-sub">แนะนำให้เริ่มชำระจาก ${firstPlan.name} ก่อน แล้วค่อยกระจายตามลำดับความสำคัญ</div>
+
+        <div class="payment-plan-list">
+          ${plans.map((plan, index) => `
+            <div class="payment-plan-item">
+              <strong>ลำดับ ${index + 1}: ${plan.name}</strong><br>
+              ควรชำระ: <strong>${formatBaht(plan.payAmount)}</strong> บาท<br>
+              ยอดการใช้งานเดิม: ${formatBaht(plan.usedAmount)} บาท<br>
+              ยอดคงเหลือหลังชำระ: ${formatBaht(plan.remainingCardBalance)} บาท<br>
+              วันครบกำหนดชำระ: ${plan.dueDateText} (เหลือ ${plan.daysUntilDue} วัน)
+            </div>
+          `).join("")}
+        </div>
+
+        <div class="advice-main">สรุปการจัดสรรเงิน</div>
+        <ul class="reason-list">
+          <li>เงินที่พร้อมชำระวันนี้: ${formatBaht(initialBudget)} บาท</li>
+          <li>เงินที่ระบบแนะนำให้นำไปชำระรวม: ${formatBaht(paidTotal)} บาท</li>
+          <li>เงินคงเหลือหลังจัดสรร: ${formatBaht(remainingBudget)} บาท</li>
+        </ul>
+
+        <div class="advice-note">
+          คำแนะนำนี้ใช้หลักการเรียงลำดับจากบัตรที่ควรชำระก่อนตามยอดใช้งาน การใช้วงเงิน และความใกล้วันครบกำหนดชำระ
+          โดยยังไม่ได้อ้างอิงยอดขั้นต่ำจริงหรือเงื่อนไขดอกเบี้ยเฉพาะของแต่ละธนาคาร
+        </div>
+      `;
+    }
+
     function renderSummary(cards) {
       const summaryContainer = document.getElementById("summaryContainer");
 
@@ -996,6 +1129,7 @@
 
       renderSpendRecommendation(cards);
       renderPaymentRecommendation(cards);
+      renderBudgetPaymentRecommendation(cards);
     }
 
     document.getElementById("cancelDialogBtn").addEventListener("click", closeUpdateDialog);
@@ -1017,6 +1151,17 @@
     });
 
     document.getElementById("plannedSpendInput").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        renderDashboard();
+      }
+    });
+
+    document.getElementById("paymentBudgetBtn").addEventListener("click", function () {
+      renderDashboard();
+    });
+
+    document.getElementById("paymentBudgetInput").addEventListener("keydown", function (e) {
       if (e.key === "Enter") {
         e.preventDefault();
         renderDashboard();
