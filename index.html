@@ -1150,6 +1150,7 @@
           ? (limitInfo.effectiveUsed / limitInfo.effectiveLimit) * 100
           : 0;
         const status = getCardStatus(card);
+	const dueStatusDisplay = usedAmount <= 0 ? "-" : card.dueStatusText;
 
         return `
           <div class="card-item">
@@ -1161,7 +1162,7 @@
             <p>การใช้วงเงินปัจจุบัน: <span class="card-row-strong">${usagePercent.toFixed(1)}%</span></p>
             <p>วันสรุปยอด: ${card.statementDateText}</p>
             <p>วันครบกำหนดชำระ: ${card.dueDateText}</p>
-            <p>สถานะกำหนดชำระ: <span class="days-left">${card.dueStatusText}</span></p>
+            <p>สถานะกำหนดชำระ: <span class="days-left">${dueStatusDisplay}</span></p>
             <p>รอบชำระ: ${card.daysFromStatementToDue || "-"} วัน</p>
             <p>สถานะบัตร: <span class="${status.className}">${status.text}</span></p>
             ${card.sharedLimitGroup ? `<p class="shared-note">${card.sharedLimitLabel || "บัตรนี้ใช้วงเงินร่วม"}</p>` : ""}
