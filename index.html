@@ -761,14 +761,20 @@
             : 9999;
           const canUse = limitInfo.effectiveAvailable >= amount;
 
+const isOverdue = card.daysUntilDue < 0;
+const isDueToday = card.daysUntilDue === 0;
+const isDueVerySoon = card.daysUntilDue > 0 && card.daysUntilDue <= 3;
+const isDueSoon = card.daysUntilDue > 3 && card.daysUntilDue <= 7;
+
           let score = 0;
           if (canUse) score += 1000;
           score -= afterUtilization;
           score += limitInfo.effectiveAvailable / 1000;
 
-          if (card.daysUntilDue < 0) score -= 120;
-          else if (card.daysUntilDue <= 3) score -= 70;
-          else if (card.daysUntilDue <= 7) score -= 35;
+if (isOverdue) score -= 1000;
+else if (isDueToday) score -= 500;
+else if (isDueVerySoon) score -= 220;
+else if (isDueSoon) score -= 90;
 
           return {
             ...card,
@@ -783,8 +789,10 @@
             score
           };
         })
-        .filter(card => card.canUse)
-        .sort((a, b) => b.score - a.score);
+
+.filter(card => card.canUse && card.daysUntilDue >= 0)
+.sort((a, b) => b.score - a.score);
+
     }
 
     function rankCardsForPayment(cards) {
